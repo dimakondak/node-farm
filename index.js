@@ -1,6 +1,7 @@
 const http = require('http');
 const url = require('url');
 const fs = require('fs');
+const { templateCreator } = require('./modules/templateCreator');
 
 const Path = {
     OVERVIEW: '/overview',
@@ -18,15 +19,15 @@ const productTemplate = fs.readFileSync(
 
 const server = http.createServer((req, res) => {
     const { query, pathname } = url.parse(req.url, true);
-    const productsJson = JSON.parse(products)
+    const productsJson = JSON.parse(products);
 
     switch (pathname) {
         case Path.OVERVIEW:
             const productCardTemplate =
                 productsJson
-            .map(product => templateCreator
-            .createProductCardTemplate(cardTemplate, product))
-            .join('');
+                .map(product => templateCreator
+                .createProductCardTemplate(cardTemplate, product))
+                .join('');
 
             res.writeHead(200, {
                 'Content-type': 'text/html',
@@ -60,23 +61,3 @@ const server = http.createServer((req, res) => {
 server.listen(8080, '127.0.0.1', () => {
     console.log('Server listening on port 8080');
 });
-
-const templateCreator = {
-    createProductCardTemplate: (cardTemplate, product) => cardTemplate
-    .replace(/{%PRODUCT_NAME%}/g, product?.productName)
-    .replace(/{%ICON%}/g, product?.image)
-    .replace(/{%PRICE%}/g, product?.price)
-    .replace(/{%FROM%}/g, product?.from)
-    .replace(/{%NUTRIENTS_NAME%}/g, product?.nutrients)
-    .replace(/{%QUANTITY%}/g, product?.quantity)
-    .replace(/{%PRICE%}/g, product?.price)
-    .replace(/{%DESCRIPTION%}/g, product?.description)
-    .replace(/{%NOT_ORGANIC%}/g, product?.organic ? '' : 'not-organic')
-    .replace(/{%ID%}/g, product?.id),
-    createOverviewTemplate: (overviewTemplate,
-        productCardTemplate) => overviewTemplate
-    .replace('{%PRODUCT_CARDS%}', productCardTemplate),
-};
-
-
-
