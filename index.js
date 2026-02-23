@@ -1,7 +1,9 @@
 const http = require('http');
 const url = require('url');
 const fs = require('fs');
-const { templateCreator } = require('./modules/templateCreator');
+const slugify = require('slugify');
+
+const TemplateCreator = require('./modules/templateCreator');
 
 const Path = {
     OVERVIEW: '/overview',
@@ -9,7 +11,6 @@ const Path = {
     API: '/api',
 };
 
-const products = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf8');
 const cardTemplate = fs.readFileSync(
     `${__dirname}/templates/template-card.html`, 'utf8');
 const overviewTemplate = fs.readFileSync(
@@ -17,9 +18,19 @@ const overviewTemplate = fs.readFileSync(
 const productTemplate = fs.readFileSync(
     `${__dirname}/templates/template-product.html`, 'utf8');
 
+const products = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf8');
+const productsJson = JSON.parse(products);
+
+const slugsMap = new Map(
+    productsJson.map(({ id, productName }) => [
+        slugify(productName, { lower: true }),
+        id
+    ])
+);
+const templateCreator = new TemplateCreator(slugsMap)
+
 const server = http.createServer((req, res) => {
     const { query, pathname } = url.parse(req.url, true);
-    const productsJson = JSON.parse(products);
 
     switch (pathname) {
         case Path.OVERVIEW:
@@ -36,7 +47,7 @@ const server = http.createServer((req, res) => {
                 productCardTemplate));
             break;
         case Path.PRODUCT:
-            const product = productsJson[query.id];
+            const product = productsJson[slugsMap.get(query.id)];
             res.writeHead(200, {
                 'Content-type': 'text/html',
             });

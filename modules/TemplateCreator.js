@@ -1,5 +1,6 @@
-export const templateCreator = {
-    createProductCardTemplate: (cardTemplate, product) => cardTemplate
+function TemplateCreator(slugsMap) {
+    this.slugsMap = slugsMap
+    this.createProductCardTemplate = (cardTemplate, product) => cardTemplate
     .replace(/{%PRODUCT_NAME%}/g, product?.productName)
     .replace(/{%ICON%}/g, product?.image)
     .replace(/{%PRICE%}/g, product?.price)
@@ -9,8 +10,10 @@ export const templateCreator = {
     .replace(/{%PRICE%}/g, product?.price)
     .replace(/{%DESCRIPTION%}/g, product?.description)
     .replace(/{%NOT_ORGANIC%}/g, product?.organic ? '' : 'not-organic')
-    .replace(/{%ID%}/g, product?.id),
-    createOverviewTemplate: (overviewTemplate,
+    .replace(/{%ID%}/g, this.slugsMap.entries().find(([, value]) => value === product?.id)[0]);
+    this.createOverviewTemplate = (overviewTemplate,
         productCardTemplate) => overviewTemplate
-    .replace('{%PRODUCT_CARDS%}', productCardTemplate),
-};
+    .replace('{%PRODUCT_CARDS%}', productCardTemplate);
+}
+
+module.exports = TemplateCreator
