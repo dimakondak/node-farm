@@ -3,6 +3,18 @@ const fs = require('fs');
 const tours = JSON.parse(fs.readFileSync(
     `${__dirname}/../dev-data/data/tours-simple.json`).toString());
 
+exports.checkId = (req, res, next, id) => {
+    const tourIndex = tours.findIndex(
+        tour => tour.id === parseInt(id));
+
+    if (tourIndex === -1) {
+        return res.status(404).json({
+            status: 'fail', message: 'Tour not found',
+        });
+    }
+    next();
+};
+
 exports.getAllTours = (req, res) => {
     res.status(200).json({
         status: 'success',
@@ -53,11 +65,6 @@ exports.createTour = (req, res) => {
 exports.updateTour = (req, res) => {
     const tourIndex = tours.findIndex(
         tour => tour.id === parseInt(req.params.id));
-    if (tourIndex === -1) {
-        return res.status(404).json({
-            status: 'fail', message: 'Tour not found',
-        });
-    }
 
     const patch = req.body;
     const newTourObj = { ...(tours[tourIndex]), ...patch };
@@ -79,12 +86,6 @@ exports.updateTour = (req, res) => {
 exports.deleteTour = (req, res) => {
     const tourIndex = tours.findIndex(
         tour => tour.id === parseInt(req.params.id));
-
-    if (tourIndex === -1) {
-        return res.status(404).json({
-            status: 'fail', message: 'Tour not found',
-        });
-    }
 
     tours.splice(tourIndex, 1);
 
