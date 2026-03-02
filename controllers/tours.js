@@ -15,6 +15,17 @@ exports.checkId = (req, res, next, id) => {
     next();
 };
 
+exports.checkBody = (req, res, next) => {
+    const { name, price } = req.body;
+
+    if (!name || !price) {
+        return res.status(400).json({
+            status: 'fail', message: 'Invalid input',
+        });
+    }
+    next();
+};
+
 exports.getAllTours = (req, res) => {
     res.status(200).json({
         status: 'success',
