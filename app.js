@@ -1,21 +1,38 @@
 const fs = require('fs');
 const express = require('express');
-
-const app = express();
-app.use(express.json());
+const morgan = require('morgan');
 
 const port = process.env.PORT || 3000;
+
+const app = express();
 app.listen(port, () => {
     console.log('Server running on port:', port);
 });
 
-app.get('/hello-world', (req, res) => {
-    res.status(200).send('Hello World!');
+// Middlewares
+app.use(morgan('dev'));
+app.use(express.json());
+app.use((req, res, next) => {
+    console.log(req.url);
+
+    next();
 });
+app.use((req, res, next) => {
+    req.requestTime = new Date().toISOString();
+
+    next();
+});
+
+// Route handlers
+const tours = JSON.parse(fs.readFileSync(
+    `${__dirname}/dev-data/data/tours-simple.json`).toString());
 
 const getAllTours = (req, res) => {
     res.status(200).json({
-        status: 'success', results: tours.length, data: {
+        status: 'success',
+        results: tours.length,
+        requestedAt: req.requestTime,
+        data: {
             tours,
         },
     });
@@ -106,8 +123,10 @@ const deleteTour = (req, res) => {
         });
 };
 
-const tours = JSON.parse(fs.readFileSync(
-    `${__dirname}/dev-data/data/tours-simple.json`).toString());
+// Routes
+app.get('/hello-world', (req, res) => {
+    res.status(200).send('Hello World!');
+});
 
 app.route('/api/v1/tours')
 .get(getAllTours)
