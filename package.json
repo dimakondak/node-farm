@@ -16,9 +16,22 @@
   "description": "",
   "dependencies": {
     "express": "^5.2.1",
+    "mongoose": "^9.2.4",
     "morgan": "^1.10.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "@eslint/eslintrc": "^3.3.4",
+    "@eslint/js": "^9.39.3",
+    "@humanwhocodes/module-importer": "^1.0.1",
+    "@humanwhocodes/object-schema": "^2.0.3",
+    "eslint": "^9.39.3",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-n": "^17.24.0",
+    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-react": "^7.37.5",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.8.1"
   }
 }
