@@ -9,8 +9,11 @@ const db_uri = process.env.DATABASE.replace(
 
 mongoose
   .connect(db_uri)
-  .then((connection) => {
-    console.log('Successfully connected to database', connection);
+  .then((instance) => {
+    console.log(
+      'Successfully connected to database:',
+      instance.connections[0].name
+    );
   })
   .catch((error) => {
     console.error('Database connection failed:', error);
