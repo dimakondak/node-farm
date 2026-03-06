@@ -1,4 +1,3 @@
-const fs = require('fs');
 const TourModel = require('../models/Tour');
 
 exports.getAllTours = (req, res) => {
