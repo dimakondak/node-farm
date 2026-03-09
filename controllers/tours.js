@@ -1,43 +1,37 @@
 const TourModel = require('../models/Tour');
 
 exports.getTours = async (req, res) => {
-  const query = { ...req.query };
-  const excluded = ['page', 'sort', 'limit', 'fields'];
-  excluded.forEach((field) => delete query[field]);
+  const dbQuery = createDBQuery(req.query);
 
-  const filterQuery = JSON.parse(
-    JSON.stringify(query).replace(
-      /\b(gte|gt|lte|lt)\b/g,
-      (match) => `$${match}`
-    )
+  const sortBy =
+    (req.aliasQuery ? req.aliasQuery.sort : req.query.sort)
+      ?.split(',')
+      .join(' ') ?? '-createdAt';
+  const fields =
+    (req.aliasQuery ? req.aliasQuery.fields : req.query.fields)
+      ?.split(',')
+      .join(' ') ?? '-__v';
+
+  const { limit, skipQuantity } = await preparePaginationProperties(
+    req.query,
+    dbQuery,
+    req.aliasQuery
   );
 
-  const sortBy = req.query.sort?.split(',').join(' ') ?? '-createdAt';
-  const page = +req.query.page ?? 1;
-  const limit = +req.query.limit ?? 10;
-  const skip = (page - 1) * limit;
-
-  if (req.query.page) {
-    const numTours = await TourModel.countDocuments(filterQuery);
-    if (skip >= numTours) throw new Error('This page does not exist');
-  }
-
-  TourModel.find(filterQuery)
+  TourModel.find(dbQuery)
     .sort(sortBy)
-    .select(req.query.fields?.split(',').join(' ') ?? '-__v')
-    .skip(skip)
+    .select(fields)
+    .skip(skipQuantity)
     .limit(limit)
     .then((tours) => {
       res.status(200).json({
         status: 'success',
-        results: tours.length,
+        results: tours?.length ?? 0,
         requestedAt: req.requestTime,
         data: {
           tours,
         },
       });
-
-      return tours;
     });
 };
 
@@ -117,4 +111,42 @@ exports.deleteTour = (req, res) => {
         message: 'Failed to delete tour',
       });
     });
+};
+
+exports.aliasTopTours = (req, res, next) => {
+  req.aliasQuery = {
+    limit: '5',
+    sort: '-ratingsAverage,price',
+    fields: 'name,price,ratingsAverage,summary,difficulty',
+  };
+  next();
+};
+
+const createDBQuery = (requestQuery) => {
+  const query = { ...requestQuery };
+  const excluded = ['page', 'sort', 'limit', 'fields'];
+  excluded.forEach((field) => delete query[field]);
+
+  return JSON.parse(
+    JSON.stringify(query).replace(
+      /\b(gte|gt|lte|lt)\b/g,
+      (match) => `$${match}`
+    )
+  );
+};
+
+const preparePaginationProperties = async (
+  requestQuery,
+  dbQuery,
+  aliasQuery
+) => {
+  const page = +(aliasQuery ? aliasQuery.page : requestQuery.page) ?? 1;
+  const limit = +(aliasQuery ? aliasQuery.limit : requestQuery.limit) ?? 10;
+  const skipQuantity = (page - 1) * limit;
+
+  if (requestQuery.page) {
+    const numTours = await TourModel.countDocuments(dbQuery);
+    if (skipQuantity >= numTours) throw new Error('This page does not exist');
+  }
+  return { limit, skipQuantity };
 };
