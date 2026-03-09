@@ -5,23 +5,29 @@ exports.getTours = (req, res) => {
   const excluded = ['page', 'sort', 'limit', 'fields'];
   excluded.forEach((field) => delete query[field]);
 
-  const dbQuery = JSON.parse(
+  const filterQuery = JSON.parse(
     JSON.stringify(query).replace(
       /\b(gte|gt|lte|lt)\b/g,
       (match) => `$${match}`
     )
   );
 
-  TourModel.find(dbQuery).then((tours) => {
-    res.status(200).json({
-      status: 'success',
-      results: tours.length,
-      requestedAt: req.requestTime,
-      data: {
-        tours,
-      },
+  const sortBy = req.query.sort ? req.query.sort : '-createdAt';
+
+  TourModel.find(filterQuery)
+    .sort(sortBy)
+    .then((tours) => {
+      res.status(200).json({
+        status: 'success',
+        results: tours.length,
+        requestedAt: req.requestTime,
+        data: {
+          tours,
+        },
+      });
+
+      return tours;
     });
-  });
 };
 
 exports.getTour = (req, res) => {
