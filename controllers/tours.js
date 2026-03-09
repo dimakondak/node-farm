@@ -12,10 +12,11 @@ exports.getTours = (req, res) => {
     )
   );
 
-  const sortBy = req.query.sort ? req.query.sort : '-createdAt';
+  const sortBy = req.query.sort?.split(',').join(' ') ?? '-createdAt';
 
   TourModel.find(filterQuery)
     .sort(sortBy)
+    .select(req.query.fields?.split(',').join(' ') ?? '-__v')
     .then((tours) => {
       res.status(200).json({
         status: 'success',
