@@ -1,6 +1,6 @@
 const express = require('express');
 const {
-  getAllTours,
+  getTours,
   createTour,
   getTour,
   updateTour,
@@ -9,7 +9,7 @@ const {
 
 const router = express.Router();
 
-router.route('/').get(getAllTours).post(createTour);
+router.route('/').get(getTours).post(createTour);
 
 router.route('/:id').get(getTour).patch(updateTour).delete(deleteTour);
 
