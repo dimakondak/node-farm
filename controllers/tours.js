@@ -1,6 +1,6 @@
 const TourModel = require('../models/Tour');
 
-exports.getTours = (req, res) => {
+exports.getTours = async (req, res) => {
   const query = { ...req.query };
   const excluded = ['page', 'sort', 'limit', 'fields'];
   excluded.forEach((field) => delete query[field]);
@@ -13,10 +13,20 @@ exports.getTours = (req, res) => {
   );
 
   const sortBy = req.query.sort?.split(',').join(' ') ?? '-createdAt';
+  const page = +req.query.page ?? 1;
+  const limit = +req.query.limit ?? 10;
+  const skip = (page - 1) * limit;
+
+  if (req.query.page) {
+    const numTours = await TourModel.countDocuments(filterQuery);
+    if (skip >= numTours) throw new Error('This page does not exist');
+  }
 
   TourModel.find(filterQuery)
     .sort(sortBy)
     .select(req.query.fields?.split(',').join(' ') ?? '-__v')
+    .skip(skip)
+    .limit(limit)
     .then((tours) => {
       res.status(200).json({
         status: 'success',
