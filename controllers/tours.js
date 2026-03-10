@@ -122,6 +122,43 @@ exports.aliasTopTours = (req, res, next) => {
   next();
 };
 
+exports.getTourStats = (req, res) => {
+  TourModel.aggregate([
+    { $match: { ratingAverage: { $gte: 4.5 } } },
+    {
+      $group: {
+        _id: { $toUpper: '$difficulty' },
+        tourCount: { $sum: 1 },
+        numRatings: { $sum: '$ratingQuantity' },
+        avgRating: { $avg: '$ratingAverage' },
+        avgPrice: { $avg: '$price' },
+        minPrice: { $min: '$price' },
+        maxPrice: { $max: '$price' },
+      },
+    },
+    {
+      $sort: { tourCount: -1 },
+    },
+    { $match: { _id: { $ne: 'EASY' } } },
+  ])
+    .then((stats) => {
+      console.log(stats);
+      res.status(200).json({
+        status: 'success',
+        requestedAt: req.requestTime,
+        data: {
+          stats,
+        },
+      });
+    })
+    .catch(() => {
+      res.status(404).json({
+        status: 'fail',
+        message: 'Tour not found',
+      });
+    });
+};
+
 const createDBQuery = (requestQuery) => {
   const query = { ...requestQuery };
   const excluded = ['page', 'sort', 'limit', 'fields'];
