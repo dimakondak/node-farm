@@ -142,12 +142,53 @@ exports.getTourStats = (req, res) => {
     { $match: { _id: { $ne: 'EASY' } } },
   ])
     .then((stats) => {
-      console.log(stats);
       res.status(200).json({
         status: 'success',
         requestedAt: req.requestTime,
         data: {
           stats,
+        },
+      });
+    })
+    .catch(() => {
+      res.status(404).json({
+        status: 'fail',
+        message: 'Tour not found',
+      });
+    });
+};
+
+exports.getMonthlyPlan = (req, res) => {
+  const year = +req.params.year;
+
+  TourModel.aggregate([
+    { $unwind: '$startDates' },
+    {
+      $match: {
+        startDates: {
+          $gte: new Date(`${year}-01-01`),
+          $lte: new Date(`${year}-12-31`),
+        },
+      },
+    },
+    {
+      $group: {
+        _id: { $month: '$startDates' },
+        numTourStarts: { $sum: 1 },
+        tours: { $push: '$name' },
+      },
+    },
+    { $addFields: { month: '$_id' } },
+    { $sort: { numTourStarts: -1 } },
+    { $project: { _id: 0 } }, // hide _id
+    { $limit: 12 },
+  ])
+    .then((plan) => {
+      res.status(200).json({
+        status: 'success',
+        requestedAt: req.requestTime,
+        data: {
+          plan,
         },
       });
     })
