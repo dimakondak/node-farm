@@ -32,4 +32,11 @@ app.get('/hello-world', (req, res) => {
   res.status(200).send('Hello World!');
 });
 
+app.use((req, res) => {
+  res.status(404).json({
+    status: 'fail',
+    message: `Route ${req.originalUrl} was not found`,
+  });
+});
+
 module.exports = app;
