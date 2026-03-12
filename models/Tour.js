@@ -78,6 +78,10 @@ tourSchema.post(/^find/, function (tours) {
   console.log(`Found ${tours.length} tours in ${Date.now() - this.start}ms`);
 });
 
+tourSchema.pre('aggregate', function () {
+  console.log('aggregation', this);
+});
+
 const Tour = mongoose.model('Tour', tourSchema);
 
 module.exports = Tour;
