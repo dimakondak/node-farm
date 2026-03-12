@@ -36,6 +36,7 @@ const tourSchema = new mongoose.Schema(
     images: [String],
     createdAt: { type: Date, default: Date.now(), select: false },
     startDates: [Date],
+    secretTour: { type: Boolean, default: false },
   },
   {
     toJSON: { virtuals: true },
@@ -61,6 +62,20 @@ tourSchema.pre('save', function () {
 
 tourSchema.post('save', async function (tour) {
   console.log('Tour was saved', tour);
+});
+
+/**
+ * Middleware to handle ALL pre-find operations. Runs before .find(), .findOne(), etc.
+ * this represents the query object
+ */
+tourSchema.pre(/^find/, function () {
+  this.find({ secretTour: { $ne: true } });
+
+  this.start = Date.now();
+});
+
+tourSchema.post(/^find/, function (tours) {
+  console.log(`Found ${tours.length} tours in ${Date.now() - this.start}ms`);
 });
 
 const Tour = mongoose.model('Tour', tourSchema);
