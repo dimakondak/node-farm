@@ -153,7 +153,7 @@ exports.getTourStats = (req, res) => {
     .catch(() => {
       res.status(404).json({
         status: 'fail',
-        message: 'Tour not found',
+        message: 'Failed to prepare stats',
       });
     });
 };
