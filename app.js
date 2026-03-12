@@ -2,6 +2,8 @@ const express = require('express');
 const morgan = require('morgan');
 const toursRouter = require('./routes/tours');
 const usersRouter = require('./routes/users');
+const RouteError = require('./routes/RouteError');
+const { errorsController } = require('./controllers/errors');
 
 process.loadEnvFile();
 
@@ -32,11 +34,11 @@ app.get('/hello-world', (req, res) => {
   res.status(200).send('Hello World!');
 });
 
-app.use((req, res) => {
-  res.status(404).json({
-    status: 'fail',
-    message: `Route ${req.originalUrl} was not found`,
-  });
+app.use((req, res, next) => {
+  const error = new RouteError(`Route ${req.originalUrl} was not found`, 404);
+  next(error);
 });
+
+app.use(errorsController);
 
 module.exports = app;
