@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+const { isAlpha } = require('validator');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -10,6 +11,10 @@ const tourSchema = new mongoose.Schema(
       trim: true,
       maxLength: [40, 'A tour name must have less or equal then 40 characters'],
       minLength: [10, 'A tour name must have more or equal then 10 characters'],
+      validate: [
+        (value) => isAlpha(value.replace(/ /g, '')),
+        'Tour name must only contain letters',
+      ],
     },
     slug: String,
     description: {
