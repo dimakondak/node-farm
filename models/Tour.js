@@ -100,7 +100,9 @@ tourSchema.pre(/^find/, function () {
 });
 
 tourSchema.post(/^find/, function (tours) {
-  console.log(`Found ${tours.length} tours in ${Date.now() - this.start}ms`);
+  console.log(
+    `Found ${tours?.length ?? 0} tours in ${Date.now() - this.start}ms`
+  );
 });
 
 tourSchema.pre('aggregate', function () {

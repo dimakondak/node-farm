@@ -1,6 +1,31 @@
+process.loadEnvFile();
+
 exports.errorsController = (error, req, res) => {
+  if (!error.isOperational)
+    return res.status(500).json({
+      status: 'error',
+      message: 'Internal Server Error',
+    });
+
+  if (process.env.NODE_ENV === 'dev') {
+    return res.status(error.statusCode ?? 500).json({
+      status: error.status || 'error',
+      message: error.message || 'Internal Server Error',
+      error,
+      stack: error.stack,
+    });
+  }
+
   res.status(error.statusCode ?? 500).json({
     status: error.status || 'error',
     message: error.message || 'Internal Server Error',
   });
+};
+
+exports.catchError = (handler) => (req, res, next) => {
+  try {
+    handler(req, res, next);
+  } catch (error) {
+    next(error);
+  }
 };
