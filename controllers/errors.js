@@ -24,5 +24,5 @@ exports.errorsController = (error, req, res, next) => {
   next(error);
 };
 
-exports.catchError = (handler) => (req, res, next) =>
+exports.catchError = (handler) => async (req, res, next) =>
   handler(req, res, next).catch(next);
