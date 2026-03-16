@@ -1,6 +1,6 @@
 process.loadEnvFile();
 
-exports.errorsController = (error, req, res) => {
+exports.errorsController = (error, req, res, next) => {
   if (!error.isOperational)
     return res.status(500).json({
       status: 'error',
@@ -20,6 +20,8 @@ exports.errorsController = (error, req, res) => {
     status: error.status || 'error',
     message: error.message || 'Internal Server Error',
   });
+
+  next(error);
 };
 
 exports.catchError = (handler) => (req, res, next) => {

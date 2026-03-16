@@ -41,7 +41,7 @@ exports.getTour = catchError(async (req, res, next) => {
   if (!tour) {
     const dbError = new Error('Tour not found');
     dbError.status = 404;
-    dbError.isOperational = false;
+    dbError.isOperational = true;
     return next(dbError);
   }
 
