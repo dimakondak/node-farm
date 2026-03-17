@@ -1,7 +1,7 @@
 process.loadEnvFile();
 
 exports.errorsController = (error, req, res, next) => {
-  if (!error.isOperational)
+  if (!error.isOperational && error.name !== 'ValidationError')
     return res.status(500).json({
       status: 'error',
       message: 'Internal Server Error',
