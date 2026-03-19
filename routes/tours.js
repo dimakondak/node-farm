@@ -9,12 +9,15 @@ const {
   getTourStats,
   getMonthlyPlan,
 } = require('../controllers/tours');
+const { protect } = require('../controllers/authentication');
 
 const router = express.Router();
 
 router.route('/top-5-cheap').get(aliasTopTours, getTours);
 
 router.route('/stats').get(getTourStats);
+
+router.use(protect);
 
 router.route('/monthly-plan/:year').get(getMonthlyPlan);
 

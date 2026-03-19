@@ -3,8 +3,6 @@ const User = require('../models/user');
 const { catchError } = require('./errors');
 const ControllerError = require('./ControllerError');
 
-process.loadEnvFile();
-
 exports.signup = catchError(async (req, res) => {
   const newUser = await User.create({
     name: req.body.name,
@@ -46,6 +44,35 @@ exports.login = catchError(async (req, res) => {
       user: user,
     },
   });
+});
+
+exports.protect = catchError(async (req, res, next) => {
+  const isTokenAbsent =
+    !req.headers.authorization ||
+    !req.headers.authorization.startsWith('Bearer');
+
+  if (isTokenAbsent) {
+    throw new ControllerError('Unauthorized', 401);
+  }
+
+  const token = req.headers.authorization.split(' ')[1];
+  if (!token) {
+    throw new ControllerError('Unauthorized', 401);
+  }
+
+  const { id, iat } = JWT.verify(token, process.env.JWT_SECRET);
+  const user = await User.findById(id).select('+passwordChangedAt');
+
+  if (!user) {
+    throw new ControllerError('Profile does not exist', 401);
+  }
+
+  if (!user.isTokenActual(iat)) {
+    throw new ControllerError('Token expired', 401);
+  }
+
+  req.user = user;
+  next();
 });
 
 const generateToken = (id) =>

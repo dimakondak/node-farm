@@ -1,7 +1,7 @@
 process.loadEnvFile();
 
 exports.errorsController = (error, req, res, next) => {
-  if (!error.isOperational && error.name !== 'ValidationError')
+  if (!error.isOperational)
     return res.status(500).json({
       status: 'error',
       message: 'Internal Server Error',
@@ -25,4 +25,25 @@ exports.errorsController = (error, req, res, next) => {
 };
 
 exports.catchError = (handler) => async (req, res, next) =>
-  handler(req, res, next).catch(next);
+  handler(req, res, next).catch((error) => {
+    if (
+      error?.name === 'TokenExpiredError' ||
+      error?.name === 'JsonWebTokenError'
+    ) {
+      const tokenError = new Error('Invalid or expired token');
+      tokenError.isOperational = true;
+      tokenError.status = 'fail';
+      tokenError.statusCode = 401;
+
+      return next(tokenError);
+    }
+
+    if (error?.name === 'ValidationError') {
+      const validationError = new Error('Internal Server Error');
+      validationError.isOperational = false;
+
+      return next(validationError);
+    }
+
+    next(error);
+  });

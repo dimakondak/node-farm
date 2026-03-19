@@ -35,6 +35,7 @@ const userSchema = new mongoose.Schema({
   },
   photo: String,
   createdAt: { type: Date, default: Date.now(), select: false },
+  passwordChangedAt: { type: Date, default: Date.now(), select: false },
 });
 
 userSchema.pre('save', async function () {
@@ -46,6 +47,14 @@ userSchema.pre('save', async function () {
 
 userSchema.methods.isValidPassword = function (candidate) {
   return compareSync(candidate, this.password);
+};
+
+userSchema.methods.isTokenActual = function (tokenTimestamp) {
+  const passwordChangedAtTimestamp = parseInt(
+    this.passwordChangedAt.getTime() / 1000,
+    10
+  );
+  return tokenTimestamp < passwordChangedAtTimestamp;
 };
 
 const User = mongoose.model('User', userSchema);
