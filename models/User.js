@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { isEmail } = require('validator');
 const { hash, compareSync } = require('bcrypt');
+const { UserRole } = require('./UserRole');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -36,6 +37,12 @@ const userSchema = new mongoose.Schema({
   photo: String,
   createdAt: { type: Date, default: Date.now(), select: false },
   passwordChangedAt: { type: Date, default: Date.now(), select: false },
+  role: {
+    type: String,
+    required: true,
+    enum: [...Object.values(UserRole)],
+    default: UserRole.USER,
+  },
 });
 
 userSchema.pre('save', async function () {
@@ -54,7 +61,7 @@ userSchema.methods.isTokenActual = function (tokenTimestamp) {
     this.passwordChangedAt.getTime() / 1000,
     10
   );
-  return tokenTimestamp < passwordChangedAtTimestamp;
+  return tokenTimestamp > passwordChangedAtTimestamp;
 };
 
 const User = mongoose.model('User', userSchema);

@@ -9,6 +9,8 @@ exports.signup = catchError(async (req, res) => {
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
+    role: req.body.role,
+    photo: req.body.photo,
   });
 
   if (!newUser) {
@@ -74,6 +76,14 @@ exports.protect = catchError(async (req, res, next) => {
   req.user = user;
   next();
 });
+
+exports.restrictTo = (roles) =>
+  catchError(async (req, res, next) => {
+    if (!roles.includes(req?.user?.role)) {
+      throw new ControllerError('Access denied', 403);
+    }
+    next();
+  });
 
 const generateToken = (id) =>
   JWT.sign({ id }, process.env.JWT_SECRET, {
