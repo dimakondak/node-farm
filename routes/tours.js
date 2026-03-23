@@ -15,18 +15,14 @@ const { UserRole } = require('../models/UserRole');
 const router = express.Router();
 
 router.route('/top-5-cheap').get(aliasTopTours, getTours);
-
 router.route('/stats').get(getTourStats);
 
 router.use(protect);
-
 router.route('/monthly-plan/:year').get(getMonthlyPlan);
-
 router
   .route('/')
   .get(getTours)
   .post(restrictTo([UserRole.ADMIN, UserRole.GUIDE]), createTour);
-
 router
   .route('/:id')
   .get(getTour)

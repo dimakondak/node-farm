@@ -6,15 +6,32 @@ const {
   updateUser,
   deleteUser,
 } = require('../controllers/users');
-const { signup, login } = require('../controllers/authentication');
+const {
+  signup,
+  login,
+  forgotPassword,
+  resetPassword,
+  protect,
+  restrictTo,
+} = require('../controllers/authentication');
+const { UserRole } = require('../models/UserRole');
 
 const router = express.Router();
 
 router.route('/signup').post(signup);
 router.route('/login').post(login);
+router.route('/forgotPassword').post(forgotPassword);
+router.route('/resetPassword').patch(resetPassword);
 
-router.route('/').get(getAllUsers).post(createUser);
-
-router.route('/:id').get(getUser).patch(updateUser).delete(deleteUser);
+router.use(protect);
+router
+  .route('/')
+  .get(getAllUsers)
+  .post(restrictTo([UserRole.ADMIN]), createUser);
+router
+  .route('/:id')
+  .get(getUser)
+  .patch(restrictTo([UserRole.ADMIN]), updateUser)
+  .delete(restrictTo([UserRole.ADMIN]), deleteUser);
 
 module.exports = router;

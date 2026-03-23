@@ -2,15 +2,18 @@ const JWT = require('jsonwebtoken');
 const User = require('../models/user');
 const { catchError } = require('./errors');
 const ControllerError = require('./ControllerError');
+const sendEmail = require('../services/email');
 
 exports.signup = catchError(async (req, res) => {
+  const { name, email, password, passwordConfirm, role, photo } = req.body;
+
   const newUser = await User.create({
-    name: req.body.name,
-    email: req.body.email,
-    password: req.body.password,
-    passwordConfirm: req.body.passwordConfirm,
-    role: req.body.role,
-    photo: req.body.photo,
+    name,
+    email,
+    password,
+    passwordConfirm,
+    role,
+    photo,
   });
 
   if (!newUser) {
@@ -47,6 +50,42 @@ exports.login = catchError(async (req, res) => {
     },
   });
 });
+
+exports.forgotPassword = catchError(async (req, res) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email }).select('+password');
+  if (!user) {
+    throw new ControllerError('There is no user with this email', 404);
+  }
+
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+
+  const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
+  const message = `Forgot your password? Reset it here: ${resetURL}\nIf you did not request a password reset, please ignore this email.`;
+  sendEmail({
+    email: user.email,
+    subject: 'Password Reset Request',
+    message,
+  })
+    .then(() => {
+      res.status(200).json({
+        status: 'success',
+        message: 'Password reset email sent',
+      });
+    })
+    .catch(async () => {
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+
+      await user.save({ validateBeforeSave: false });
+
+      throw new ControllerError('Failed to send email', 500);
+    });
+});
+
+exports.resetPassword = catchError(async (req, res) => {});
 
 exports.protect = catchError(async (req, res, next) => {
   const isTokenAbsent =

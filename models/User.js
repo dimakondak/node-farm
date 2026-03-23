@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const { isEmail } = require('validator');
 const { hash, compareSync } = require('bcrypt');
@@ -37,6 +38,14 @@ const userSchema = new mongoose.Schema({
   photo: String,
   createdAt: { type: Date, default: Date.now(), select: false },
   passwordChangedAt: { type: Date, default: Date.now(), select: false },
+  passwordResetToken: {
+    type: String,
+    select: false,
+  },
+  passwordResetExpires: {
+    type: Date,
+    select: false,
+  },
   role: {
     type: String,
     required: true,
@@ -62,6 +71,19 @@ userSchema.methods.isTokenActual = function (tokenTimestamp) {
     10
   );
   return tokenTimestamp > passwordChangedAtTimestamp;
+};
+
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  const tenMinutes = 10 * 60 * 1000;
+  this.passwordResetExpires = Date.now() + tenMinutes;
+
+  return resetToken;
 };
 
 const User = mongoose.model('User', userSchema);
