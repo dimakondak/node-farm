@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const JWT = require('jsonwebtoken');
 const User = require('../models/user');
 const { catchError } = require('./errors');
@@ -85,7 +86,31 @@ exports.forgotPassword = catchError(async (req, res) => {
     });
 });
 
-exports.resetPassword = catchError(async (req, res) => {});
+exports.resetPassword = catchError(async (req, res) => {
+  const { token } = req.params;
+  const { password, passwordConfirm } = req.body;
+
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+  if (!user) {
+    throw new ControllerError('Token is invalid or expired', 400);
+  }
+
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  user.password = password;
+  user.passwordConfirm = passwordConfirm;
+  await user.save({ validateBeforeSave: true });
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Password reset successful',
+  });
+});
 
 exports.protect = catchError(async (req, res, next) => {
   const isTokenAbsent =

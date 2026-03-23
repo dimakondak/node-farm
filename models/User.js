@@ -61,6 +61,12 @@ userSchema.pre('save', async function () {
   this.passwordConfirm = undefined;
 });
 
+userSchema.pre('save', async function () {
+  if (!this.isModified('password') || this.isNew) return;
+
+  this.passwordChangedAt = Date.now();
+});
+
 userSchema.methods.isValidPassword = function (candidate) {
   return compareSync(candidate, this.password);
 };
