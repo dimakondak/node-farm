@@ -13,8 +13,8 @@ exports.updateCurrentUserProfile = catchError(async (req, res) => {
 
   res.status(200).json({
     status: 'success',
-    updatedUser,
     message: 'User profile was updated successfully',
+    data: { user: updatedUser },
   });
 });
 
