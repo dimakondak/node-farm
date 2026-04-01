@@ -1,5 +1,6 @@
 const express = require('express');
 const {
+  updateCurrentUserProfile,
   getAllUsers,
   createUser,
   getUser,
@@ -26,6 +27,7 @@ router.route('/resetPassword/:token').patch(resetPassword);
 
 router.use(protect);
 router.route('/updatePassword').patch(updatePassword);
+router.route('/updateCurrentUser').patch(updateCurrentUserProfile);
 router
   .route('/')
   .get(getAllUsers)
