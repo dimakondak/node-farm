@@ -43,11 +43,11 @@ POST {{base_url}}/users/signup
 Content-Type: application/json
 
 {
-  "name": "Admin",
-  "email": "admin@gmail.com",
-  "password": "admin!23",
-  "passwordConfirm": "admin!23",
-  "role": "admin"
+  "name": "Guide",
+  "email": "testMail2@gmail.com",
+  "password": "password123",
+  "passwordConfirm": "password123",
+  "role": "guide"
 }
 
 > {%
@@ -96,7 +96,111 @@ Content-Type: application/json
 
 {
   "email": "testMail@gmail.com",
-  "password": "secret123"
+  "password": "secret1234"
+}
+
+> {%
+  // TODO: migrate to HTTP Client Response handler API
+  // pm.test("Successful POST request", function () {
+  //     pm.expect(pm.response.code).to.be.oneOf([200, 201]);
+  //     pm.environment.set("jwt", pm.response.json().token);
+  // });
+  //
+%}
+
+###
+# group: Users
+# @name Login admin by query injection
+# This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.
+# A successful POST request typically returns a `200 OK` or `201 Created` response code.
+//< {%
+    // TODO: you can add here Pre-request handler
+//%}
+POST {{base_url}}/users/login
+Content-Type: application/json
+
+{
+  "email": {
+    "$gt": ""
+  },
+  "password": "admin!23"
+}
+
+> {%
+  // TODO: migrate to HTTP Client Response handler API
+  // pm.test("Successful POST request", function () {
+  //     pm.expect(pm.response.code).to.be.oneOf([200, 201]);
+  //     pm.environment.set("jwt", pm.response.json().token);
+  // });
+  //
+%}
+
+###
+# group: Users
+# @name 1) Forgot password
+# This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.
+# A successful POST request typically returns a `200 OK` or `201 Created` response code.
+//< {%
+    // TODO: you can add here Pre-request handler
+//%}
+POST {{base_url}}/users/forgotPassword
+Content-Type: application/json
+
+{
+  "email": "testMail@gmail.com"
+}
+
+> {%
+  // TODO: migrate to HTTP Client Response handler API
+  // pm.test("Successful POST request", function () {
+  //     pm.expect(pm.response.code).to.be.oneOf([200, 201]);
+  //     pm.environment.set("jwt", pm.response.json().token);
+  // });
+  //
+%}
+
+###
+# group: Users
+# @name 2) Reset password
+# This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.
+# A successful POST request typically returns a `200 OK` or `201 Created` response code.
+//< {%
+    // TODO: you can add here Pre-request handler
+//%}
+PATCH {{base_url}}/users/resetPassword/ddd36b1de93707bbef6791f1d2e9ce0c158c5d7c3b07be3840da02f4f87b3d19
+Content-Type: application/json
+
+{
+  "password": "secret1234",
+  "passwordConfirm": "secret1234"
+}
+
+> {%
+  // TODO: migrate to HTTP Client Response handler API
+  // pm.test("Successful POST request", function () {
+  //     pm.expect(pm.response.code).to.be.oneOf([200, 201]);
+  //     pm.environment.set("jwt", pm.response.json().token);
+  // });
+  //
+%}
+
+###
+# group: Users
+# @name Update password
+# This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.
+# A successful POST request typically returns a `200 OK` or `201 Created` response code.
+//< {%
+    // TODO: you can add here Pre-request handler
+//%}
+PATCH {{base_url}}/users/updatePassword
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+{
+  "email": "testMail@gmail.com",
+  "password": "secret1234",
+  "passwordConfirm": "secret1234",
+  "newPasswordConfirm": "123"
 }
 
 > {%
