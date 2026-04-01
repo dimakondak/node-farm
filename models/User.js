@@ -52,6 +52,11 @@ const userSchema = new mongoose.Schema({
     enum: [...Object.values(UserRole)],
     default: UserRole.USER,
   },
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
 });
 
 userSchema.pre('save', async function () {
@@ -65,6 +70,10 @@ userSchema.pre('save', async function () {
   if (!this.isModified('password') || this.isNew) return;
 
   this.passwordChangedAt = Date.now();
+});
+
+userSchema.pre(/^find/, async function () {
+  this.find({ active: { $ne: false } });
 });
 
 userSchema.methods.isValidPassword = function (candidate) {
