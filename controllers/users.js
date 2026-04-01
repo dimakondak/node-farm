@@ -19,7 +19,14 @@ exports.updateCurrentUserProfile = catchError(async (req, res) => {
 });
 
 exports.deleteCurrentUser = catchError(async (req, res) => {
-  await UserModel.findByIdAndUpdate(req.user.id, { active: false });
+  await UserModel.findByIdAndUpdate(
+    req.user.id,
+    { active: false },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
 
   res.status(204).json({
     status: 'success',

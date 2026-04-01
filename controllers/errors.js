@@ -27,6 +27,7 @@ exports.errorsController = (error, req, res, next) => {
 
 exports.catchError = (handler) => async (req, res, next) =>
   handler(req, res, next).catch((error) => {
+    console.error(error.message);
     if (
       error?.name === 'TokenExpiredError' ||
       error?.name === 'JsonWebTokenError'
@@ -37,6 +38,7 @@ exports.catchError = (handler) => async (req, res, next) =>
     }
 
     if (error?.name === 'ValidationError') {
+      console.error(error.message);
       const validationError = new Error('Internal Server Error');
       validationError.isOperational = false;
 

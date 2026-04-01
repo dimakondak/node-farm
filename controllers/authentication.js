@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const JWT = require('jsonwebtoken');
-const User = require('../models/user');
+const UserModel = require('../models/User');
 const { catchError } = require('./errors');
 const ControllerError = require('./ControllerError');
 const sendEmail = require('../services/email');
@@ -8,7 +8,7 @@ const sendEmail = require('../services/email');
 exports.signup = catchError(async (req, res) => {
   const { name, email, password, passwordConfirm, role, photo } = req.body;
 
-  const newUser = await User.create({
+  const newUser = await UserModel.create({
     name,
     email,
     password,
@@ -36,18 +36,19 @@ exports.login = catchError(async (req, res) => {
     throw new ControllerError('Failed to login', 500);
   }
 
-  const user = await User.findOne({ email }).select('+password');
+  const user = await UserModel.findOne({ email }).select('+password');
   if (!user || !user.isValidPassword(password)) {
     throw new ControllerError('Invalid email or password', 401);
   }
 
   const token = generateToken(user._id);
+  res.cookie('jwt', token, createCookieOptions());
 
   res.status(200).json({
     status: 'success',
     token,
     data: {
-      user: user,
+      user: { ...user, password: undefined },
     },
   });
 });
@@ -55,7 +56,7 @@ exports.login = catchError(async (req, res) => {
 exports.forgotPassword = catchError(async (req, res) => {
   const { email } = req.body;
 
-  const user = await User.findOne({ email }).select('+password');
+  const user = await UserModel.findOne({ email }).select('+password');
   if (!user) {
     throw new ControllerError('There is no user with this email', 404);
   }
@@ -92,7 +93,7 @@ exports.resetPassword = catchError(async (req, res) => {
 
   const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-  const user = await User.findOne({
+  const user = await UserModel.findOne({
     passwordResetToken: hashedToken,
     passwordResetExpires: { $gt: Date.now() },
   });
@@ -115,7 +116,7 @@ exports.resetPassword = catchError(async (req, res) => {
 exports.updatePassword = catchError(async (req, res) => {
   const { password, newPassword, newPasswordConfirm } = req.body;
 
-  const user = await User.findById(req.user.id).select('+password');
+  const user = await UserModel.findById(req.user.id).select('+password');
 
   if (!user || !password || !user.isValidPassword(password)) {
     throw new ControllerError('Invalid email or password', 401);
@@ -132,6 +133,7 @@ exports.updatePassword = catchError(async (req, res) => {
   await user.save({ validateBeforeSave: true });
 
   const token = generateToken(user._id);
+  res.cookie('jwt', token, createCookieOptions());
 
   res.status(200).json({
     status: 'success',
@@ -155,7 +157,7 @@ exports.protect = catchError(async (req, res, next) => {
   }
 
   const { id, iat } = JWT.verify(token, process.env.JWT_SECRET);
-  const user = await User.findById(id).select('+passwordChangedAt');
+  const user = await UserModel.findById(id).select('+passwordChangedAt');
 
   if (!user) {
     throw new ControllerError('Profile does not exist', 401);
@@ -181,3 +183,15 @@ const generateToken = (id) =>
   JWT.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
+
+const createCookieOptions = () => {
+  const cookiesExpirationMilliseconds =
+    process.env.JWT_COOKIES_EXPIRES_IN * 24 * 60 * 60 * 1000;
+  const isSecure = process.env.NODE_ENV === 'production';
+
+  return {
+    httpOnly: true,
+    secure: isSecure,
+    expires: new Date(Date.now() + cookiesExpirationMilliseconds),
+  };
+};
