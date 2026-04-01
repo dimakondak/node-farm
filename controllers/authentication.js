@@ -112,6 +112,34 @@ exports.resetPassword = catchError(async (req, res) => {
   });
 });
 
+exports.updatePassword = catchError(async (req, res) => {
+  const { password, newPassword, newPasswordConfirm } = req.body;
+
+  const user = await User.findById(req.user.id).select('+password');
+
+  if (!user || !password || !user.isValidPassword(password)) {
+    throw new ControllerError('Invalid email or password', 401);
+  }
+  if (password === newPassword) {
+    throw new ControllerError('Same password', 400);
+  }
+  if (newPassword !== newPasswordConfirm) {
+    throw new ControllerError('Password mismatch', 400);
+  }
+
+  user.password = newPassword;
+  user.passwordConfirm = newPasswordConfirm;
+  await user.save({ validateBeforeSave: true });
+
+  const token = generateToken(user._id);
+
+  res.status(200).json({
+    status: 'success',
+    token,
+    message: 'Password was updated successfully',
+  });
+});
+
 exports.protect = catchError(async (req, res, next) => {
   const isTokenAbsent =
     !req.headers.authorization ||

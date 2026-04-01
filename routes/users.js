@@ -13,6 +13,7 @@ const {
   resetPassword,
   protect,
   restrictTo,
+  updatePassword,
 } = require('../controllers/authentication');
 const { UserRole } = require('../models/UserRole');
 
@@ -24,6 +25,7 @@ router.route('/forgotPassword').post(forgotPassword);
 router.route('/resetPassword/:token').patch(resetPassword);
 
 router.use(protect);
+router.route('/updatePassword').patch(updatePassword);
 router
   .route('/')
   .get(getAllUsers)

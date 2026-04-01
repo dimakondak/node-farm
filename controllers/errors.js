@@ -1,3 +1,4 @@
+const ControllerError = require('./ControllerError');
 process.loadEnvFile();
 
 exports.errorsController = (error, req, res, next) => {
@@ -30,10 +31,7 @@ exports.catchError = (handler) => async (req, res, next) =>
       error?.name === 'TokenExpiredError' ||
       error?.name === 'JsonWebTokenError'
     ) {
-      const tokenError = new Error('Invalid or expired token');
-      tokenError.isOperational = true;
-      tokenError.status = 'fail';
-      tokenError.statusCode = 401;
+      const tokenError = new ControllerError('Invalid or expired token', 401);
 
       return next(tokenError);
     }
