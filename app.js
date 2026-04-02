@@ -4,6 +4,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const mongoSanitize = require('@exortek/express-mongo-sanitize');
 const { xss } = require('express-xss-sanitizer');
+const hpp = require('hpp');
 
 const toursRouter = require('./routes/tours');
 const usersRouter = require('./routes/users');
@@ -50,6 +51,22 @@ app.use(mongoSanitize());
  * Sanitizes data against XSS
  */
 app.use(xss());
+
+/**
+ * Prevents parameter pollution
+ */
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsQuantity',
+      'ratingAverage',
+      'maxGroupSize',
+      'difficulty',
+      'price',
+    ],
+  })
+);
 
 /**
  * Serves resources
