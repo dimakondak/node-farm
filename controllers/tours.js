@@ -4,7 +4,6 @@ const ControllerError = require('./ControllerError');
 
 exports.getTours = async (req, res) => {
   const dbQuery = createDBQuery(req.query);
-  console.log('SORT', req.query.sort);
 
   const sortBy =
     (req.aliasQuery ? req.aliasQuery.sort : req.query.sort)
