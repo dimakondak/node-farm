@@ -2,6 +2,9 @@ const ControllerError = require('./ControllerError');
 process.loadEnvFile();
 
 exports.errorsController = (error, req, res, next) => {
+  if (process.env.NODE_ENV === 'dev') {
+    console.log(error);
+  }
   if (!error.isOperational)
     return res.status(500).json({
       status: 'error',
