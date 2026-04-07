@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
 const { isAlpha } = require('validator');
+const UserModel = require('./User');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -88,6 +89,7 @@ const tourSchema = new mongoose.Schema(
         day: Number,
       },
     ],
+    guides: Array,
   },
   {
     toJSON: { virtuals: true },
@@ -109,6 +111,16 @@ tourSchema.pre('save', function () {
 
 tourSchema.pre('save', function () {
   console.log('Saving tour');
+});
+
+/**
+ * User embedding
+ */
+tourSchema.pre('save', async function () {
+  const guidesPromises = this.guides.map(
+    async (guideId) => await UserModel.findById(guideId)
+  );
+  this.guides = await Promise.all(guidesPromises);
 });
 
 tourSchema.post('save', async function (tour) {
