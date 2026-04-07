@@ -13,28 +13,28 @@ mongoose.connect(db_uri).then(() => {
   console.log('Successfully connected to database');
 });
 
-const tours = JSON.parse(fs.readFileSync('./data/tours-simple.json', 'utf8'));
+const tours = JSON.parse(fs.readFileSync('./data/tours.json', 'utf8'));
 
-const importData = () => {
+const seedData = () => {
   TourModel.create(tours)
     .then(() => {
-      console.log('Successfully imported tours');
+      console.log('Successfully seeded tours');
     })
     .catch((error) => {
-      console.error('Error creating Tour:', error.message);
+      console.error('Error seeding Tour:', error.message);
     })
     .finally(() => {
       process.exit(0);
     });
 };
 
-const deleteData = () => {
+const unseedData = () => {
   TourModel.deleteMany()
     .then(() => {
-      console.log('Successfully deleted all tours');
+      console.log('Successfully unseeded tours');
     })
     .catch((error) => {
-      console.error('Error deleting tours:', error.message);
+      console.error('Error unseeding tours:', error.message);
     })
     .finally(() => {
       process.exit(0);
@@ -42,10 +42,10 @@ const deleteData = () => {
 };
 
 switch (process.argv[2]) {
-  case '--import':
-    return importData();
-  case '--delete':
-    return deleteData();
+  case '--up':
+    return seedData();
+  case '--down':
+    return unseedData();
   default:
     process.exit(0);
 }
