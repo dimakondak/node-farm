@@ -126,6 +126,13 @@ tourSchema.pre(/^find/, function () {
   this.start = Date.now();
 });
 
+tourSchema.pre(/^find/, function () {
+  this.populate({
+    path: 'guides',
+    select: '-__v',
+  });
+});
+
 tourSchema.post(/^find/, function (tours) {
   console.log(
     `Found ${tours?.length ?? 0} tours in ${Date.now() - this.start}ms`

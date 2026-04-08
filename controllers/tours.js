@@ -38,10 +38,7 @@ exports.getTours = async (req, res) => {
 };
 
 exports.getTour = catchError(async (req, res) => {
-  const tour = await TourModel.findById(req.params.id).populate({
-    path: 'guides',
-    select: '-__v',
-  });
+  const tour = await TourModel.findById(req.params.id);
   if (!tour) {
     throw new ControllerError('Tour not found', 404);
   }
