@@ -101,6 +101,15 @@ tourSchema.virtual('durationWeeks').get(function () {
 });
 
 /**
+ * Virtual populate
+ */
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+});
+
+/**
  * Middleware to handle pre-save operations. Runs only before .save() and .create()
  * does NOT run before .insertMany()
  */

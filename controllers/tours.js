@@ -38,7 +38,7 @@ exports.getTours = async (req, res) => {
 };
 
 exports.getTour = catchError(async (req, res) => {
-  const tour = await TourModel.findById(req.params.id);
+  const tour = await TourModel.findById(req.params.id).populate('reviews');
   if (!tour) {
     throw new ControllerError('Tour not found', 404);
   }
