@@ -9,11 +9,7 @@ const {
   getTourStats,
   getMonthlyPlan,
 } = require('../controllers/tours');
-const {
-  getReviews,
-  createReview,
-  deleteReview,
-} = require('../controllers/reviews');
+const { getReviews, createReview } = require('../controllers/reviews');
 const { protect, restrictTo } = require('../controllers/authentication');
 const { UserRole } = require('../models/UserRole');
 
@@ -36,7 +32,6 @@ router
 router
   .route('/:tourId/reviews')
   .get(getReviews)
-  .post(restrictTo([UserRole.USER]), createReview)
-  .delete(restrictTo([UserRole.USER]), deleteReview);
+  .post(restrictTo([UserRole.USER]), createReview);
 
 module.exports = router;
