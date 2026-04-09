@@ -23,6 +23,7 @@ exports.getReviews = catchError(async (req, res) => {
 exports.createReview = catchError(async (req, res) => {
   const newReviewPayload = {
     user: req.user.id,
+    tour: req.params?.tourId,
     ...req.body,
   };
 

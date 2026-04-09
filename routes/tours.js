@@ -9,6 +9,11 @@ const {
   getTourStats,
   getMonthlyPlan,
 } = require('../controllers/tours');
+const {
+  getReviews,
+  createReview,
+  deleteReview,
+} = require('../controllers/reviews');
 const { protect, restrictTo } = require('../controllers/authentication');
 const { UserRole } = require('../models/UserRole');
 
@@ -28,5 +33,10 @@ router
   .get(getTour)
   .patch(restrictTo([UserRole.ADMIN, UserRole.GUIDE]), updateTour)
   .delete(restrictTo([UserRole.ADMIN, UserRole.GUIDE]), deleteTour);
+router
+  .route('/:tourId/reviews')
+  .get(getReviews)
+  .post(restrictTo([UserRole.USER]), createReview)
+  .delete(restrictTo([UserRole.USER]), deleteReview);
 
 module.exports = router;
