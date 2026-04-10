@@ -1,6 +1,5 @@
-const crypto = require('crypto');
 const JWT = require('jsonwebtoken');
-const UserModel = require('../models/User');
+const UserRepository = require('../repository/UserRepository');
 const { catchError } = require('./errors');
 const ControllerError = require('./ControllerError');
 const sendEmail = require('../services/email');
@@ -8,7 +7,7 @@ const sendEmail = require('../services/email');
 exports.signup = catchError(async (req, res) => {
   const { name, email, password, passwordConfirm, role, photo } = req.body;
 
-  const newUser = await UserModel.create({
+  const newUser = await UserRepository.createUser({
     name,
     email,
     password,
@@ -36,7 +35,7 @@ exports.login = catchError(async (req, res) => {
     throw new ControllerError('Failed to login', 500);
   }
 
-  const user = await UserModel.findOne({ email }).select('+password');
+  const user = await UserRepository.findUserByEmail(email, ['password']);
   if (!user || !user.isValidPassword(password)) {
     throw new ControllerError('Invalid email or password', 401);
   }
@@ -56,7 +55,9 @@ exports.login = catchError(async (req, res) => {
 exports.forgotPassword = catchError(async (req, res) => {
   const { email } = req.body;
 
-  const user = await UserModel.findOne({ email }).select('+password');
+  const user = await UserRepository.findUserByEmail(email, {
+    select: '+password',
+  });
   if (!user) {
     throw new ControllerError('There is no user with this email', 404);
   }
@@ -91,21 +92,9 @@ exports.resetPassword = catchError(async (req, res) => {
   const { token } = req.params;
   const { password, passwordConfirm } = req.body;
 
-  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+  const user = await UserRepository.findUserByResetToken(token);
 
-  const user = await UserModel.findOne({
-    passwordResetToken: hashedToken,
-    passwordResetExpires: { $gt: Date.now() },
-  });
-  if (!user) {
-    throw new ControllerError('Token is invalid or expired', 400);
-  }
-
-  user.passwordResetToken = undefined;
-  user.passwordResetExpires = undefined;
-  user.password = password;
-  user.passwordConfirm = passwordConfirm;
-  await user.save({ validateBeforeSave: true });
+  await UserRepository.resetPassword(user, password, passwordConfirm);
 
   res.status(200).json({
     status: 'success',
@@ -116,7 +105,9 @@ exports.resetPassword = catchError(async (req, res) => {
 exports.updatePassword = catchError(async (req, res) => {
   const { password, newPassword, newPasswordConfirm } = req.body;
 
-  const user = await UserModel.findById(req.user.id).select('+password');
+  const user = await UserRepository.findById(req.user.id, {
+    select: '+password',
+  });
 
   if (!user || !password || !user.isValidPassword(password)) {
     throw new ControllerError('Invalid email or password', 401);
@@ -157,11 +148,9 @@ exports.protect = catchError(async (req, res, next) => {
   }
 
   const { id, iat } = JWT.verify(token, process.env.JWT_SECRET);
-  const user = await UserModel.findById(id).select('+passwordChangedAt');
-
-  if (!user) {
-    throw new ControllerError('Profile does not exist', 401);
-  }
+  const user = await UserRepository.findById(id, {
+    select: '+passwordChangedAt',
+  });
 
   if (!user.isTokenActual(iat)) {
     throw new ControllerError('Token expired', 401);

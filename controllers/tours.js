@@ -1,47 +1,46 @@
-const TourModel = require('../models/Tour');
+const TourRepository = require('../repository/TourRepository');
 const { catchError } = require('./errors');
-const ControllerError = require('./ControllerError');
 
-exports.getTours = async (req, res) => {
-  const dbQuery = createDBQuery(req.query);
+exports.getTours = catchError(async (req, res) => {
+  const dbQuery = TourRepository.createDBQuery(req.query);
 
-  const sortBy =
+  const sort =
     (req.aliasQuery ? req.aliasQuery.sort : req.query.sort)
       ?.split(',')
       .join(' ') ?? '-createdAt';
-  const fields =
+  const select =
     (req.aliasQuery ? req.aliasQuery.fields : req.query.fields)
       ?.split(',')
       .join(' ') ?? '-__v';
 
-  const { limit, skipQuantity } = await preparePaginationProperties(
-    req.query,
-    dbQuery,
-    req.aliasQuery
-  );
+  const { limit, skipQuantity: skip } =
+    await TourRepository.preparePaginationProperties(
+      req.query,
+      dbQuery,
+      req.aliasQuery
+    );
 
-  TourModel.find(dbQuery)
-    .sort(sortBy)
-    .select(fields)
-    .skip(skipQuantity)
-    .limit(limit)
-    .then((tours) => {
-      res.status(200).json({
-        status: 'success',
-        results: tours?.length ?? 0,
-        requestedAt: req.requestTime,
-        data: {
-          tours,
-        },
-      });
-    });
-};
+  const tours = await TourRepository.find(dbQuery, {
+    sort,
+    select,
+    skip,
+    limit,
+  });
+
+  res.status(200).json({
+    status: 'success',
+    results: tours?.length ?? 0,
+    requestedAt: req.requestTime,
+    data: {
+      tours,
+    },
+  });
+});
 
 exports.getTour = catchError(async (req, res) => {
-  const tour = await TourModel.findById(req.params.id).populate('reviews');
-  if (!tour) {
-    throw new ControllerError('Tour not found', 404);
-  }
+  const tour = await TourRepository.findById(req.params.id, {
+    populate: 'reviews',
+  });
 
   res.status(200).json({
     status: 'success',
@@ -55,7 +54,7 @@ exports.getTour = catchError(async (req, res) => {
 exports.createTour = (req, res) => {
   const newTourPayload = req.body;
 
-  TourModel.create(newTourPayload)
+  TourRepository.create(newTourPayload)
     .then((newTour) => {
       res.status(201).json({
         status: 'success',
@@ -72,44 +71,25 @@ exports.createTour = (req, res) => {
     });
 };
 
-exports.updateTour = (req, res) => {
-  TourModel.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  })
-    .then((tour) => {
-      res.status(200).json({
-        status: 'success',
-        requestedAt: req.requestTime,
-        data: {
-          tour,
-        },
-      });
-    })
-    .catch(() => {
-      res.status(404).json({
-        status: 'fail',
-        message: 'Failed to update tour',
-      });
-    });
-};
+exports.updateTour = catchError(async (req, res) => {
+  const tour = await TourRepository.updateById(req.params.id, req.body);
+  res.status(200).json({
+    status: 'success',
+    requestedAt: req.requestTime,
+    data: {
+      tour,
+    },
+  });
+});
 
-exports.deleteTour = (req, res) => {
-  TourModel.findByIdAndDelete(req.params.id)
-    .then(() => {
-      res.status(204).json({
-        status: 'success',
-        requestedAt: req.requestTime,
-        data: null,
-      });
-    })
-    .catch(() => {
-      res.status(404).json({
-        status: 'fail',
-        message: 'Failed to delete tour',
-      });
-    });
-};
+exports.deleteTour = catchError(async (req, res) => {
+  await TourRepository.deleteById(req.params.id);
+  res.status(204).json({
+    status: 'success',
+    requestedAt: req.requestTime,
+    data: null,
+  });
+});
 
 exports.aliasTopTours = (req, res, next) => {
   req.aliasQuery = {
@@ -121,24 +101,7 @@ exports.aliasTopTours = (req, res, next) => {
 };
 
 exports.getTourStats = (req, res) => {
-  TourModel.aggregate([
-    { $match: { ratingAverage: { $gte: 4.5 } } },
-    {
-      $group: {
-        _id: { $toUpper: '$difficulty' },
-        tourCount: { $sum: 1 },
-        numRatings: { $sum: '$ratingQuantity' },
-        avgRating: { $avg: '$ratingAverage' },
-        avgPrice: { $avg: '$price' },
-        minPrice: { $min: '$price' },
-        maxPrice: { $max: '$price' },
-      },
-    },
-    {
-      $sort: { tourCount: -1 },
-    },
-    { $match: { _id: { $ne: 'EASY' } } },
-  ])
+  TourRepository.prepareStatistics()
     .then((stats) => {
       res.status(200).json({
         status: 'success',
@@ -159,28 +122,7 @@ exports.getTourStats = (req, res) => {
 exports.getMonthlyPlan = (req, res) => {
   const year = +req.params.year;
 
-  TourModel.aggregate([
-    { $unwind: '$startDates' },
-    {
-      $match: {
-        startDates: {
-          $gte: new Date(`${year}-01-01`),
-          $lte: new Date(`${year}-12-31`),
-        },
-      },
-    },
-    {
-      $group: {
-        _id: { $month: '$startDates' },
-        numTourStarts: { $sum: 1 },
-        tours: { $push: '$name' },
-      },
-    },
-    { $addFields: { month: '$_id' } },
-    { $sort: { numTourStarts: -1 } },
-    { $project: { _id: 0 } }, // hide _id
-    { $limit: 12 },
-  ])
+  TourRepository.prepareMonthlyPlan(year)
     .then((plan) => {
       res.status(200).json({
         status: 'success',
@@ -196,33 +138,4 @@ exports.getMonthlyPlan = (req, res) => {
         message: 'Tour not found',
       });
     });
-};
-
-const createDBQuery = (requestQuery) => {
-  const query = { ...requestQuery };
-  const excluded = ['page', 'sort', 'limit', 'fields'];
-  excluded.forEach((field) => delete query[field]);
-
-  return JSON.parse(
-    JSON.stringify(query).replace(
-      /\b(gte|gt|lte|lt)\b/g,
-      (match) => `$${match}`
-    )
-  );
-};
-
-const preparePaginationProperties = async (
-  requestQuery,
-  dbQuery,
-  aliasQuery
-) => {
-  const page = +(aliasQuery ? aliasQuery.page : requestQuery.page) ?? 1;
-  const limit = +(aliasQuery ? aliasQuery.limit : requestQuery.limit) ?? 10;
-  const skipQuantity = (page - 1) * limit;
-
-  if (requestQuery.page) {
-    const numTours = await TourModel.countDocuments(dbQuery);
-    if (skipQuantity >= numTours) throw new Error('This page does not exist');
-  }
-  return { limit, skipQuantity };
 };

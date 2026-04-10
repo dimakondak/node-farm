@@ -1,4 +1,4 @@
-const UserModel = require('../models/User');
+const UserRepository = require('../repository/UserRepository');
 const { catchError } = require('./errors');
 
 exports.updateCurrentUserProfile = catchError(async (req, res) => {
@@ -6,10 +6,7 @@ exports.updateCurrentUserProfile = catchError(async (req, res) => {
     name: req.body.name,
     email: req.body.email,
   };
-  const updatedUser = await UserModel.findByIdAndUpdate(req.user.id, profile, {
-    new: true,
-    runValidators: true,
-  });
+  const updatedUser = await UserRepository.updateById(req.user.id, profile);
 
   res.status(200).json({
     status: 'success',
@@ -19,14 +16,7 @@ exports.updateCurrentUserProfile = catchError(async (req, res) => {
 });
 
 exports.deleteCurrentUser = catchError(async (req, res) => {
-  await UserModel.findByIdAndUpdate(
-    req.user.id,
-    { active: false },
-    {
-      new: true,
-      runValidators: true,
-    }
-  );
+  await UserRepository.updateById(req.user.id, { active: false });
 
   res.status(204).json({
     status: 'success',
@@ -35,7 +25,7 @@ exports.deleteCurrentUser = catchError(async (req, res) => {
 });
 
 exports.getAllUsers = (req, res) => {
-  UserModel.find().then((users) => {
+  UserRepository.findUsers().then((users) => {
     res.status(200).json({
       status: 'success',
       results: users?.length ?? 0,

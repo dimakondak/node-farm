@@ -9,9 +9,9 @@ const {
   getTourStats,
   getMonthlyPlan,
 } = require('../controllers/tours');
-const { getReviews, createReview } = require('../controllers/reviews');
+const reviewsRouter = require('./reviews');
 const { protect, restrictTo } = require('../controllers/authentication');
-const { UserRole } = require('../models/UserRole');
+const { UserRole } = require('../UserRole');
 
 const router = express.Router();
 
@@ -29,9 +29,6 @@ router
   .get(getTour)
   .patch(restrictTo([UserRole.ADMIN, UserRole.GUIDE]), updateTour)
   .delete(restrictTo([UserRole.ADMIN, UserRole.GUIDE]), deleteTour);
-router
-  .route('/:tourId/reviews')
-  .get(getReviews)
-  .post(restrictTo([UserRole.USER]), createReview);
+router.use('/:tourId/reviews', reviewsRouter);
 
 module.exports = router;

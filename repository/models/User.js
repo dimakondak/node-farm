@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 const { isEmail } = require('validator');
 const { hash, compareSync } = require('bcrypt');
-const { UserRole } = require('./UserRole');
+const { UserRole } = require('../../UserRole');
 
 const userSchema = new mongoose.Schema({
   name: {

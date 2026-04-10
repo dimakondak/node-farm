@@ -5,9 +5,9 @@ const {
   deleteReview,
 } = require('../controllers/reviews');
 const { protect, restrictTo } = require('../controllers/authentication');
-const { UserRole } = require('../models/UserRole');
+const { UserRole } = require('../UserRole');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 router
   .route('/')
