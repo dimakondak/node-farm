@@ -52,11 +52,11 @@ class TourRepository extends MongoRepository {
     ]);
   }
 
-  async countToursToSkip(dbQuery, page, limit) {
+  async countToursToSkip(filter, page, limit) {
     const skipQuantity = (page - 1) * limit;
 
     if (page) {
-      const recordsQuantity = await this.model.countDocuments(dbQuery);
+      const recordsQuantity = await this.count(filter);
       if (skipQuantity >= recordsQuantity) {
         throw new Error('This page does not exist');
       }

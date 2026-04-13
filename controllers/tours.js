@@ -13,10 +13,10 @@ exports.getTours = catchError(async (req, res) => {
 
   const page = +(req.aliasQuery?.page ?? req.query.page ?? 1);
   const limit = +(req.aliasQuery?.limit ?? req.query.limit ?? 10);
-  const dbQuery = convertQuery(req.query);
+  const filter = convertQueryToFilter(req.query);
 
-  const skip = await TourRepository.countToursToSkip(dbQuery, page, limit);
-  const tours = await TourRepository.find(dbQuery, {
+  const skip = await TourRepository.countToursToSkip(filter, page, limit);
+  const tours = await TourRepository.find(filter, {
     sort,
     select,
     skip,
@@ -136,7 +136,7 @@ exports.getMonthlyPlan = (req, res) => {
     });
 };
 
-const convertQuery = (requestQuery) => {
+const convertQueryToFilter = (requestQuery) => {
   const query = { ...requestQuery };
   const excludedFields = ['page', 'sort', 'limit', 'fields'];
   excludedFields.forEach((field) => delete query[field]);
