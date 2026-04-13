@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
-const TourModel = require('../repository/models/Tour');
+const UserRepository = require('../repository/UserRepository');
+const TourRepository = require('../repository/TourRepository');
+const ReviewRepository = require('../repository/ReviewRepository');
 
 const fs = require('fs');
 
@@ -14,14 +16,20 @@ mongoose.connect(db_uri).then(() => {
 });
 
 const tours = JSON.parse(fs.readFileSync('./data/tours.json', 'utf8'));
+const users = JSON.parse(fs.readFileSync('./data/users.json', 'utf8'));
+const reviews = JSON.parse(fs.readFileSync('./data/reviews.json', 'utf8'));
 
 const seedData = () => {
-  TourModel.create(tours)
+  Promise.all([
+    UserRepository.create(users),
+    TourRepository.create(tours),
+    ReviewRepository.create(reviews),
+  ])
     .then(() => {
-      console.log('Successfully seeded tours');
+      console.log('Successfully seeded data');
     })
     .catch((error) => {
-      console.error('Error seeding Tour:', error.message);
+      console.error('Error seeding data:', error.message);
     })
     .finally(() => {
       process.exit(0);
@@ -29,12 +37,16 @@ const seedData = () => {
 };
 
 const unseedData = () => {
-  TourModel.deleteMany()
+  Promise.all([
+    UserRepository.deleteMany(),
+    TourRepository.deleteMany(),
+    ReviewRepository.deleteMany(),
+  ])
     .then(() => {
-      console.log('Successfully unseeded tours');
+      console.log('Successfully unseeded data');
     })
     .catch((error) => {
-      console.error('Error unseeding tours:', error.message);
+      console.error('Error unseeding data:', error.message);
     })
     .finally(() => {
       process.exit(0);

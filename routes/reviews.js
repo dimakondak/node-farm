@@ -13,6 +13,8 @@ router
   .route('/')
   .get(getReviews)
   .post(protect, restrictTo([UserRole.USER]), createReview);
-router.route('/:id').delete(protect, deleteReview);
+router
+  .route('/:id')
+  .delete(protect, restrictTo([UserRole.ADMIN, UserRole.USER]), deleteReview);
 
 module.exports = router;

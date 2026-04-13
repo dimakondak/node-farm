@@ -58,6 +58,10 @@ class MongoRepository {
   async count(filter = {}) {
     return this.model.countDocuments(filter);
   }
+
+  async deleteMany() {
+    return this.model.deleteMany();
+  }
 }
 
 module.exports = MongoRepository;
