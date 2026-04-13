@@ -7,7 +7,7 @@ class TourRepository extends MongoRepository {
   }
 
   async prepareMonthlyPlan(year) {
-    this.model.aggregate([
+    return this.model.aggregate([
       { $unwind: '$startDates' },
       {
         $match: {
@@ -32,7 +32,7 @@ class TourRepository extends MongoRepository {
   }
 
   async prepareStatistics() {
-    this.model.aggregate([
+    return this.model.aggregate([
       { $match: { ratingAverage: { $gte: 4.5 } } },
       {
         $group: {
@@ -52,33 +52,17 @@ class TourRepository extends MongoRepository {
     ]);
   }
 
-  createDBQuery(requestQuery) {
-    const query = { ...requestQuery };
-    const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach((field) => delete query[field]);
-
-    // Handle advanced filtering operators (gte, gt, lte, lt) by adding '$' prefix
-    const queryStr = JSON.stringify(query).replace(
-      /\b(gte|gt|lte|lt)\b/g,
-      (match) => `$${match}`
-    );
-
-    return JSON.parse(queryStr);
-  }
-
-  async preparePaginationProperties(requestQuery, dbQuery, aliasQuery) {
-    const page = +(aliasQuery?.page ?? requestQuery.page ?? 1);
-    const limit = +(aliasQuery?.limit ?? requestQuery.limit ?? 10);
+  async countToursToSkip(dbQuery, page, limit) {
     const skipQuantity = (page - 1) * limit;
 
-    if (requestQuery.page) {
-      const numDocs = await this.countTours(dbQuery);
-      if (skipQuantity >= numDocs) {
+    if (page) {
+      const recordsQuantity = await this.model.countDocuments(dbQuery);
+      if (skipQuantity >= recordsQuantity) {
         throw new Error('This page does not exist');
       }
     }
 
-    return { limit, skipQuantity };
+    return skipQuantity;
   }
 }
 

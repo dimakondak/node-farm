@@ -2,8 +2,6 @@ const TourRepository = require('../repository/TourRepository');
 const { catchError } = require('./errors');
 
 exports.getTours = catchError(async (req, res) => {
-  const dbQuery = TourRepository.createDBQuery(req.query);
-
   const sort =
     (req.aliasQuery ? req.aliasQuery.sort : req.query.sort)
       ?.split(',')
@@ -13,13 +11,11 @@ exports.getTours = catchError(async (req, res) => {
       ?.split(',')
       .join(' ') ?? '-__v';
 
-  const { limit, skipQuantity: skip } =
-    await TourRepository.preparePaginationProperties(
-      req.query,
-      dbQuery,
-      req.aliasQuery
-    );
+  const page = +(req.aliasQuery?.page ?? req.query.page ?? 1);
+  const limit = +(req.aliasQuery?.limit ?? req.query.limit ?? 10);
+  const dbQuery = convertQuery(req.query);
 
+  const skip = await TourRepository.countToursToSkip(dbQuery, page, limit);
   const tours = await TourRepository.find(dbQuery, {
     sort,
     select,
@@ -138,4 +134,18 @@ exports.getMonthlyPlan = (req, res) => {
         message: 'Tour not found',
       });
     });
+};
+
+const convertQuery = (requestQuery) => {
+  const query = { ...requestQuery };
+  const excludedFields = ['page', 'sort', 'limit', 'fields'];
+  excludedFields.forEach((field) => delete query[field]);
+
+  // Handle advanced filtering operators (gte, gt, lte, lt) by adding '$' prefix
+  const queryStr = JSON.stringify(query).replace(
+    /\b(gte|gt|lte|lt)\b/g,
+    (match) => `$${match}`
+  );
+
+  return JSON.parse(queryStr);
 };
