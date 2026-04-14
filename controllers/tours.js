@@ -35,7 +35,7 @@ exports.getTours = catchError(async (req, res) => {
 
 exports.getTour = catchError(async (req, res) => {
   const tour = await TourRepository.findById(req.params.id, {
-    populate: 'reviews',
+    populate: { path: 'reviews', select: '-tour' },
   });
 
   res.status(200).json({
