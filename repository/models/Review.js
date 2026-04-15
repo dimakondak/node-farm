@@ -42,6 +42,10 @@ reviewSchema.pre(/^find/, function () {
   });
 });
 
+reviewSchema.post(/^findOneAnd/, async function (review) {
+  Review.calculateAverageRatings(review.tour._id);
+});
+
 reviewSchema.post('save', function () {
   Review.calculateAverageRatings(this.tour);
 });
@@ -60,8 +64,8 @@ reviewSchema.statics.calculateAverageRatings = async function (tourId) {
   const statistics = statisticsSet[0];
 
   await TourModel.findByIdAndUpdate(tourId, {
-    ratingQuantity: statistics.reviewsQuantity,
-    ratingAverage: statistics.averageRating,
+    ratingQuantity: statistics.reviewsQuantity ?? 0,
+    ratingAverage: statistics.averageRating ?? 0,
   });
 };
 

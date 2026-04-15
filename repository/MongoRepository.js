@@ -47,7 +47,11 @@ class MongoRepository {
     return this.model.create(payload);
   }
 
-  async updateById(id, payload, options = { new: true, runValidators: true }) {
+  async updateById(
+    id,
+    payload,
+    options = { returnDocument: 'after', runValidators: true }
+  ) {
     return this.model.findByIdAndUpdate(id, payload, options);
   }
 

@@ -37,6 +37,15 @@ exports.createReview = catchError(async (req, res) => {
   });
 });
 
+exports.updateReview = catchError(async (req, res) => {
+  const review = await ReviewRepository.updateById(req.params.id, req.body);
+
+  res.status(201).json({
+    status: 'success',
+    data: { review },
+  });
+});
+
 exports.deleteReview = catchError(async (req, res) => {
   await ReviewRepository.deleteById(req.params.id);
   res.status(204).json({
