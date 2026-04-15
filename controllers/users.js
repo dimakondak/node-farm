@@ -25,7 +25,7 @@ exports.deleteCurrentUser = catchError(async (req, res) => {
 });
 
 exports.getAllUsers = (req, res) => {
-  UserRepository.findUsers().then((users) => {
+  UserRepository.find().then((users) => {
     res.status(200).json({
       status: 'success',
       results: users?.length ?? 0,

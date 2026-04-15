@@ -7,10 +7,6 @@ class UserRepository extends MongoRepository {
     super(UserModel);
   }
 
-  async findUsers(filter = {}, options = {}) {
-    return this.find(filter, options);
-  }
-
   async findUserByEmail(email, options = {}) {
     return this.model.findOne({ email }, options);
   }

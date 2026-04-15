@@ -43,11 +43,11 @@ reviewSchema.pre(/^find/, function () {
 });
 
 reviewSchema.post(/^findOneAnd/, async function (review) {
-  Review.calculateAverageRatings(review.tour._id);
+  await Review.calculateAverageRatings(review.tour._id);
 });
 
-reviewSchema.post('save', function () {
-  Review.calculateAverageRatings(this.tour);
+reviewSchema.post('save', async function () {
+  await Review.calculateAverageRatings(this.tour);
 });
 
 reviewSchema.statics.calculateAverageRatings = async function (tourId) {
