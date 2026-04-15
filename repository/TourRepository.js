@@ -55,14 +55,24 @@ class TourRepository extends MongoRepository {
   async countToursToSkip(filter, page, limit) {
     const skipQuantity = (page - 1) * limit;
 
-    if (page) {
-      const recordsQuantity = await this.count(filter);
-      if (skipQuantity >= recordsQuantity) {
-        throw new Error('This page does not exist');
-      }
+    const recordsQuantity = await this.count(filter);
+    if (page <= 0 || skipQuantity >= recordsQuantity) {
+      throw new Error('This page does not exist');
     }
 
     return skipQuantity;
+  }
+
+  async findToursWithin(longitude, latitude, distance, units) {
+    const radius = units === 'mi' ? distance / 3963.2 : distance / 6378.1;
+
+    return this.find({
+      startLocation: {
+        $geoWithin: {
+          $centerSphere: [[longitude, latitude], radius],
+        },
+      },
+    });
   }
 }
 

@@ -1,5 +1,6 @@
 const TourRepository = require('../repository/TourRepository');
 const { catchError } = require('./errors');
+const ControllerError = require('./ControllerError');
 
 exports.getTours = catchError(async (req, res) => {
   const sort =
@@ -135,6 +136,29 @@ exports.getMonthlyPlan = (req, res) => {
       });
     });
 };
+
+exports.getToursWithin = catchError(async (req, res) => {
+  const { distance, coordinates, units } = req.params;
+  const [latitude, longitude] = coordinates.split(',');
+
+  if (!latitude || !longitude) {
+    throw ControllerError('Please specify a latitude and longitude', 400);
+  }
+
+  const tours = await TourRepository.findToursWithin(
+    longitude,
+    latitude,
+    distance,
+    units
+  );
+
+  res.status(200).json({
+    status: 'success',
+    results: tours.length,
+    requestedAt: req.requestTime,
+    data: { tours },
+  });
+});
 
 const convertQueryToFilter = (requestQuery) => {
   const query = { ...requestQuery };
