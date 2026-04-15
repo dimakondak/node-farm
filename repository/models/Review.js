@@ -42,6 +42,8 @@ reviewSchema.pre(/^find/, function () {
   });
 });
 
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
+
 reviewSchema.post(/^findOneAnd/, async function (review) {
   await Review.calculateAverageRatings(review.tour._id);
 });
