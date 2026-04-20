@@ -10,6 +10,7 @@ const path = require('path');
 const toursRouter = require('./routes/tours');
 const usersRouter = require('./routes/users');
 const reviewsRouter = require('./routes/reviews');
+const viewsRouter = require('./routes/views');
 const RouteError = require('./routes/RouteError');
 const { errorsController } = require('./controllers/errors');
 
@@ -93,15 +94,7 @@ app.use((req, res, next) => {
 /**
  * Routes setup
  */
-app.get('/', (req, res) => {
-  res.status(200).render('base', {
-    tour: 'TEST',
-    user: {
-      photo: 'photo.jpg',
-      name: 'John Doe',
-    },
-  });
-});
+app.use('/', viewsRouter);
 
 app.use('/api/v1/tours', toursRouter);
 app.use('/api/v1/users', usersRouter);
