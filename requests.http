@@ -44,8 +44,8 @@ POST {{base_url}}/users/signup
 Content-Type: application/json
 
 {
-  "name": "Guide",
-  "email": "testMail2@gmail.com",
+  "name": "<script>alert()</script>",
+  "email": "testMail3@gmail.com",
   "password": "password123",
   "passwordConfirm": "password123",
   "role": "guide"
@@ -72,8 +72,7 @@ Content-Type: application/json
 
 {
   "email": "admin@gmail.com",
-  "password": "admin!23"
-}
+  "password": "{{admin_password}}"
 
 > {%
   // TODO: migrate to HTTP Client Response handler API
@@ -97,7 +96,7 @@ Content-Type: application/json
 
 {
   "email": "testMail@gmail.com",
-  "password": "secret1234"
+  "password": "{{user_password}}"
 }
 
 > {%
@@ -251,11 +250,77 @@ DELETE {{base_url}}/info?
 %}
 
 ###
+# group: Tours / Reviews
+# @name Get tour reviews
+# This is a GET request and it is used to "get" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have `id=1`).
+# A successful GET response will have a `200 OK` status, and should include some kind of response body - for example, HTML web content or JSON data.
+GET {{base_url}}/tours/69d527a94eff4be924953f10/reviews
+
+> {%
+  // TODO: migrate to HTTP Client Response handler API
+  // pm.test("Status code is 200", function () {
+  //     pm.response.to.have.status(200);
+  // });
+%}
+
+###
+# group: Tours / Reviews
+# @name Post tour review
+# This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.
+# A successful POST request typically returns a `200 OK` or `201 Created` response code.
+POST {{base_url}}/tours/69d527a94eff4be924953f10/reviews
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+{
+  "review": "Nice",
+  "rating": 5
+}
+
+> {%
+  // TODO: migrate to HTTP Client Response handler API
+  // pm.test("Successful POST request", function () {
+  //     pm.expect(pm.response.code).to.be.oneOf([200, 201]);
+  // });
+  //
+%}
+
+###
 # group: Tours
 # @name Get ALL tours
 # This is a GET request and it is used to "get" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have `id=1`).
 # A successful GET response will have a `200 OK` status, and should include some kind of response body - for example, HTML web content or JSON data.
 GET {{base_url}}/tours
+Authorization: Bearer {{jwt}}
+
+> {%
+  // TODO: migrate to HTTP Client Response handler API
+  // pm.test("Status code is 200", function () {
+  //     pm.response.to.have.status(200);
+  // });
+%}
+
+###
+# group: Tours
+# @name Get tours within
+# This is a GET request and it is used to "get" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have `id=1`).
+# A successful GET response will have a `200 OK` status, and should include some kind of response body - for example, HTML web content or JSON data.
+GET {{base_url}}/tours/tours-within/400/center/33.903156,-118.214772/units/mi
+Authorization: Bearer {{jwt}}
+
+> {%
+  // TODO: migrate to HTTP Client Response handler API
+  // pm.test("Status code is 200", function () {
+  //     pm.response.to.have.status(200);
+  // });
+%}
+
+###
+# group: Tours
+# @name Get distances
+# This is a GET request and it is used to "get" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have `id=1`).
+# A successful GET response will have a `200 OK` status, and should include some kind of response body - for example, HTML web content or JSON data.
+GET {{base_url}}/tours/distances/33.903156,-118.214772/units/mi
 Authorization: Bearer {{jwt}}
 
 > {%
@@ -287,11 +352,12 @@ GET {{base_url}}/tours/monthly-plan/2021
 GET {{base_url}}/tours?
     difficulty=medium&
     duration[lt]=10&
-    sort=-price,duration&
     fields=-description&
-    limit=4&
+    limit=2&
+    any=medium&
+    sort=-price,duration&
     page=1&
-    any=medium
+    price[lt]=1000
 
 > {%
   // TODO: migrate to HTTP Client Response handler API
@@ -308,11 +374,11 @@ GET {{base_url}}/tours?
 GET {{base_url}}/tours?
     difficulty=medium&
     duration[lt]=10&
-    sort=-price,duration&
     fields=-description&
     limit=4&
     page=1&
-    any=medium
+    any=medium&
+    sort=duration
 
 > {%
   // TODO: migrate to HTTP Client Response handler API
@@ -372,7 +438,7 @@ POST {{base_url}}/tours
 Content-Type: application/json
 
 {
-  "name": "New TESTTESTTEST",
+  "name": "New TESTtest",
   "duration": 7,
   "maxGroupSize": 15,
   "difficulty": "medium",
@@ -456,7 +522,7 @@ Content-Type: application/json
 
 ###
 # group: Reviews
-# @name Get tour reviews
+# @name Get reviews
 # This is a GET request and it is used to "get" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have `id=1`).
 # A successful GET response will have a `200 OK` status, and should include some kind of response body - for example, HTML web content or JSON data.
 GET {{base_url}}/reviews
@@ -479,7 +545,8 @@ Content-Type: application/json
 # @name Delete review
 # This is a DELETE request, and it is used to delete data that was previously created via a POST request. You typically identify the entity being updated by including an identifier in the URL (eg. `id=1`).
 # A successful DELETE request typically returns a `200 OK`, `202 Accepted`, or `204 No Content` response code.
-DELETE {{base_url}}/reviews/69b29dca9e9bd9e2f6d538e6
+DELETE {{base_url}}/reviews/69de5ce8f32453ff1b361c01
+Authorization: Bearer {{jwt}}
 
 > {%
   // TODO: migrate to HTTP Client Response handler API
@@ -500,7 +567,7 @@ Content-Type: application/json
 
 {
   "review": "Greate trip",
-  "rating": 4,
+  "rating": 5,
   "tour": "5c88fa8cf4afda39709c295a"
 }
 
@@ -508,6 +575,27 @@ Content-Type: application/json
   // TODO: migrate to HTTP Client Response handler API
   // pm.test("Successful POST request", function () {
   //     pm.expect(pm.response.code).to.be.oneOf([200, 201]);
+  // });
+  //
+%}
+
+###
+# group: Reviews
+# @name Update review
+# This is a PUT request and it is used to overwrite an existing piece of data. For instance, after you create an entity with a POST request, you may want to modify that later. You can do that using a PUT request. You typically identify the entity being updated by including an identifier in the URL (eg. `id=1`).
+# A successful PUT request typically returns a `200 OK`, `201 Created`, or `204 No Content` response code.
+PUT {{base_url}}/reviews/69d66a2764f51823596df8fc
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+{
+  "rating": 5
+}
+
+> {%
+  // TODO: migrate to HTTP Client Response handler API
+  // pm.test("Successful PUT request", function () {
+  //     pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);
   // });
   //
 %}

@@ -9,6 +9,7 @@ const {
   getTourStats,
   getMonthlyPlan,
   getToursWithin,
+  getDistances,
 } = require('../controllers/tours');
 const reviewsRouter = require('./reviews');
 const { protect, restrictTo } = require('../controllers/authentication');
@@ -27,6 +28,7 @@ router
 router
   .route('/tours-within/:distance/center/:coordinates/units/:units')
   .get(getToursWithin);
+router.route('/distances/:coordinates/units/:units').get(getDistances);
 router
   .route('/')
   .post(restrictTo([UserRole.ADMIN, UserRole.LEAD_GUIDE]), createTour);

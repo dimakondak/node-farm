@@ -160,6 +160,28 @@ exports.getToursWithin = catchError(async (req, res) => {
   });
 });
 
+exports.getDistances = catchError(async (req, res) => {
+  const { coordinates, units } = req.params;
+  const [latitude, longitude] = coordinates.split(',');
+
+  if (!latitude || !longitude) {
+    throw ControllerError('Please specify a latitude and longitude', 400);
+  }
+
+  const distances = await TourRepository.findDistances(
+    longitude,
+    latitude,
+    units
+  );
+
+  res.status(200).json({
+    status: 'success',
+    results: distances.length,
+    requestedAt: req.requestTime,
+    data: { distances },
+  });
+});
+
 const convertQueryToFilter = (requestQuery) => {
   const query = { ...requestQuery };
   const excludedFields = ['page', 'sort', 'limit', 'fields'];

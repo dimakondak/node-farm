@@ -74,6 +74,28 @@ class TourRepository extends MongoRepository {
       },
     });
   }
+
+  async findDistances(longitude, latitude, units) {
+    const unitsMultiplier = units === 'mi' ? 0.000621371 : 0.001;
+    return this.model.aggregate([
+      {
+        $geoNear: {
+          near: {
+            type: 'Point',
+            coordinates: [+longitude, +latitude],
+          },
+          distanceField: 'distance',
+          distanceMultiplier: unitsMultiplier,
+        },
+      },
+      {
+        $project: {
+          distance: 1,
+          name: 1,
+        },
+      },
+    ]);
+  }
 }
 
 module.exports = new TourRepository();
