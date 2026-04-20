@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const mongoSanitize = require('@exortek/express-mongo-sanitize');
 const { xss } = require('express-xss-sanitizer');
 const hpp = require('hpp');
+const path = require('path');
 
 const toursRouter = require('./routes/tours');
 const usersRouter = require('./routes/users');
@@ -15,6 +16,17 @@ const { errorsController } = require('./controllers/errors');
 process.loadEnvFile();
 
 const app = express();
+
+/**
+ * Configures SSR
+ */
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
+/**
+ * Serves resources
+ */
+app.use(express.static(path.join(__dirname, 'public')));
+
 /**
  * Sets security HTTP header
  */
@@ -70,11 +82,6 @@ app.use(
 );
 
 /**
- * Serves resources
- */
-app.use(express.static(`${__dirname}/public`));
-
-/**
  * Records time of the request
  */
 app.use((req, res, next) => {
@@ -86,6 +93,16 @@ app.use((req, res, next) => {
 /**
  * Routes setup
  */
+app.get('/', (req, res) => {
+  res.status(200).render('base', {
+    tour: 'TEST',
+    user: {
+      photo: 'photo.jpg',
+      name: 'John Doe',
+    },
+  });
+});
+
 app.use('/api/v1/tours', toursRouter);
 app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/reviews', reviewsRouter);
