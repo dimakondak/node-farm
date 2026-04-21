@@ -1,5 +1,6 @@
 const MongoRepository = require('./MongoRepository');
 const TourModel = require('./models/Tour');
+const crypto = require('crypto');
 
 class TourRepository extends MongoRepository {
   constructor() {
@@ -50,6 +51,19 @@ class TourRepository extends MongoRepository {
       },
       { $match: { _id: { $ne: 'EASY' } } },
     ]);
+  }
+
+  async findTourBySlug(slug) {
+    return this.model
+      .findOne({ slug })
+      .populate({
+        path: 'reviews',
+        fields: 'review rating user',
+      })
+      .populate({
+        path: 'guides',
+        fields: 'name photo',
+      });
   }
 
   async countToursToSkip(filter, page, limit) {
