@@ -31,7 +31,28 @@ app.use(express.static(path.join(__dirname, 'public')));
 /**
  * Sets security HTTP header
  */
-app.use(helmet());
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      imgSrc: [
+        "'self'",
+        'data:',
+        'blob:',
+        'https://tile.openstreetmap.org',
+        'https://*.tile.openstreetmap.org',
+      ],
+      connectSrc: [
+        "'self'",
+        'https://tile.openstreetmap.org',
+        'https://*.tile.openstreetmap.org',
+      ],
+    },
+  })
+);
 
 /**
  * Provides logs in dev mode

@@ -13,7 +13,6 @@ exports.getOverview = catchError(async (req, res) => {
 exports.getTour = catchError(async (req, res) => {
   const slug = req.params.slug;
   const tour = await TourRepository.findTourBySlug(slug);
-  console.log(tour.reviews);
 
   res.status(200).render('tour', { tour });
 });
