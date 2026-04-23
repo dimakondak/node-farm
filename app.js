@@ -1,11 +1,13 @@
+const hpp = require('hpp');
+const path = require('path');
+
 const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const mongoSanitize = require('@exortek/express-mongo-sanitize');
 const { xss } = require('express-xss-sanitizer');
-const hpp = require('hpp');
-const path = require('path');
+const cookieParser = require('cookie-parser');
 
 const toursRouter = require('./routes/tours');
 const usersRouter = require('./routes/users');
@@ -47,6 +49,8 @@ app.use(
       ],
       connectSrc: [
         "'self'",
+        'ws://localhost:*',
+        'http://localhost:*',
         'https://tile.openstreetmap.org',
         'https://*.tile.openstreetmap.org',
       ],
@@ -76,6 +80,7 @@ app.use(rateLimiter);
  */
 app.set('query parser', 'extended');
 app.use(express.json({ limit: '10kb' }));
+app.use(cookieParser());
 
 /**
  * Sanitizes data against NoSQL query injection

@@ -9,6 +9,7 @@
     "format": "prettier --write .",
     "db:seed": "cd ./dev-data && node ./import-dev-data.js --up",
     "db:unseed": "cd ./dev-data && node ./import-dev-data.js --down",
+    "bundle:js": "parcel watch ./public/js/index.js --out-dir ./public/js/dist --out-file bundle.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -21,7 +22,9 @@
   "description": "",
   "dependencies": {
     "@exortek/express-mongo-sanitize": "^2.0.2",
+    "axios": "^1.15.2",
     "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.2",
     "express-xss-sanitizer": "^2.0.2",
@@ -49,6 +52,7 @@
     "eslint-plugin-prettier": "^5.5.5",
     "eslint-plugin-react": "^7.37.5",
     "nodemon": "^3.1.14",
+    "parcel-bundler": "^1.12.5",
     "prettier": "^3.8.1"
   }
 }
