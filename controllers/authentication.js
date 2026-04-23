@@ -171,7 +171,7 @@ exports.protect = catchError(async (req, res, next) => {
   next();
 });
 
-exports.isLoggedIn = catchError(async (req, res, next) => {
+exports.isLoggedIn = async (req, res, next) => {
   const isTokenAbsent =
     (!req.headers.authorization ||
       !req.headers.authorization.startsWith('Bearer')) &&
@@ -197,7 +197,7 @@ exports.isLoggedIn = catchError(async (req, res, next) => {
 
   res.locals.user = user;
   next();
-});
+};
 
 exports.restrictTo = (roles) =>
   catchError(async (req, res, next) => {
