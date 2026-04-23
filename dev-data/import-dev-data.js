@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
-const TourModel = require('../models/Tour');
+const UserRepository = require('../repository/UserRepository');
+const TourRepository = require('../repository/TourRepository');
+const ReviewRepository = require('../repository/ReviewRepository');
 
 const fs = require('fs');
 
@@ -13,28 +15,38 @@ mongoose.connect(db_uri).then(() => {
   console.log('Successfully connected to database');
 });
 
-const tours = JSON.parse(fs.readFileSync('./data/tours-simple.json', 'utf8'));
+const tours = JSON.parse(fs.readFileSync('./data/tours.json', 'utf8'));
+const users = JSON.parse(fs.readFileSync('./data/users.json', 'utf8'));
+const reviews = JSON.parse(fs.readFileSync('./data/reviews.json', 'utf8'));
 
-const importData = () => {
-  TourModel.create(tours)
+const seedData = () => {
+  Promise.all([
+    UserRepository.create(users),
+    TourRepository.create(tours),
+    ReviewRepository.create(reviews),
+  ])
     .then(() => {
-      console.log('Successfully imported tours');
+      console.log('Successfully seeded data');
     })
     .catch((error) => {
-      console.error('Error creating Tour:', error.message);
+      console.error('Error seeding data:', error.message);
     })
     .finally(() => {
       process.exit(0);
     });
 };
 
-const deleteData = () => {
-  TourModel.deleteMany()
+const unseedData = () => {
+  Promise.all([
+    UserRepository.deleteMany(),
+    TourRepository.deleteMany(),
+    ReviewRepository.deleteMany(),
+  ])
     .then(() => {
-      console.log('Successfully deleted all tours');
+      console.log('Successfully unseeded data');
     })
     .catch((error) => {
-      console.error('Error deleting tours:', error.message);
+      console.error('Error unseeding data:', error.message);
     })
     .finally(() => {
       process.exit(0);
@@ -42,10 +54,10 @@ const deleteData = () => {
 };
 
 switch (process.argv[2]) {
-  case '--import':
-    return importData();
-  case '--delete':
-    return deleteData();
+  case '--up':
+    return seedData();
+  case '--down':
+    return unseedData();
   default:
     process.exit(0);
 }

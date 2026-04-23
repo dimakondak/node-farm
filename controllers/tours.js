@@ -1,47 +1,43 @@
-const TourModel = require('../models/Tour');
+const TourRepository = require('../repository/TourRepository');
 const { catchError } = require('./errors');
 const ControllerError = require('./ControllerError');
 
-exports.getTours = async (req, res) => {
-  const dbQuery = createDBQuery(req.query);
-
-  const sortBy =
+exports.getTours = catchError(async (req, res) => {
+  const sort =
     (req.aliasQuery ? req.aliasQuery.sort : req.query.sort)
       ?.split(',')
       .join(' ') ?? '-createdAt';
-  const fields =
+  const select =
     (req.aliasQuery ? req.aliasQuery.fields : req.query.fields)
       ?.split(',')
       .join(' ') ?? '-__v';
 
-  const { limit, skipQuantity } = await preparePaginationProperties(
-    req.query,
-    dbQuery,
-    req.aliasQuery
-  );
+  const page = +(req.aliasQuery?.page ?? req.query.page ?? 1);
+  const limit = +(req.aliasQuery?.limit ?? req.query.limit ?? 10);
+  const filter = convertQueryToFilter(req.query);
 
-  TourModel.find(dbQuery)
-    .sort(sortBy)
-    .select(fields)
-    .skip(skipQuantity)
-    .limit(limit)
-    .then((tours) => {
-      res.status(200).json({
-        status: 'success',
-        results: tours?.length ?? 0,
-        requestedAt: req.requestTime,
-        data: {
-          tours,
-        },
-      });
-    });
-};
+  const skip = await TourRepository.countToursToSkip(filter, page, limit);
+  const tours = await TourRepository.find(filter, {
+    sort,
+    select,
+    skip,
+    limit,
+  });
+
+  res.status(200).json({
+    status: 'success',
+    results: tours?.length ?? 0,
+    requestedAt: req.requestTime,
+    data: {
+      tours,
+    },
+  });
+});
 
 exports.getTour = catchError(async (req, res) => {
-  const tour = await TourModel.findById(req.params.id);
-  if (!tour) {
-    throw new ControllerError('Tour not found', 404);
-  }
+  const tour = await TourRepository.findById(req.params.id, {
+    populate: { path: 'reviews', select: '-tour' },
+  });
 
   res.status(200).json({
     status: 'success',
@@ -55,7 +51,7 @@ exports.getTour = catchError(async (req, res) => {
 exports.createTour = (req, res) => {
   const newTourPayload = req.body;
 
-  TourModel.create(newTourPayload)
+  TourRepository.create(newTourPayload)
     .then((newTour) => {
       res.status(201).json({
         status: 'success',
@@ -72,44 +68,25 @@ exports.createTour = (req, res) => {
     });
 };
 
-exports.updateTour = (req, res) => {
-  TourModel.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  })
-    .then((tour) => {
-      res.status(200).json({
-        status: 'success',
-        requestedAt: req.requestTime,
-        data: {
-          tour,
-        },
-      });
-    })
-    .catch(() => {
-      res.status(404).json({
-        status: 'fail',
-        message: 'Failed to update tour',
-      });
-    });
-};
+exports.updateTour = catchError(async (req, res) => {
+  const tour = await TourRepository.updateById(req.params.id, req.body);
+  res.status(200).json({
+    status: 'success',
+    requestedAt: req.requestTime,
+    data: {
+      tour,
+    },
+  });
+});
 
-exports.deleteTour = (req, res) => {
-  TourModel.findByIdAndDelete(req.params.id)
-    .then(() => {
-      res.status(204).json({
-        status: 'success',
-        requestedAt: req.requestTime,
-        data: null,
-      });
-    })
-    .catch(() => {
-      res.status(404).json({
-        status: 'fail',
-        message: 'Failed to delete tour',
-      });
-    });
-};
+exports.deleteTour = catchError(async (req, res) => {
+  await TourRepository.deleteById(req.params.id);
+  res.status(204).json({
+    status: 'success',
+    requestedAt: req.requestTime,
+    data: null,
+  });
+});
 
 exports.aliasTopTours = (req, res, next) => {
   req.aliasQuery = {
@@ -121,24 +98,7 @@ exports.aliasTopTours = (req, res, next) => {
 };
 
 exports.getTourStats = (req, res) => {
-  TourModel.aggregate([
-    { $match: { ratingAverage: { $gte: 4.5 } } },
-    {
-      $group: {
-        _id: { $toUpper: '$difficulty' },
-        tourCount: { $sum: 1 },
-        numRatings: { $sum: '$ratingQuantity' },
-        avgRating: { $avg: '$ratingAverage' },
-        avgPrice: { $avg: '$price' },
-        minPrice: { $min: '$price' },
-        maxPrice: { $max: '$price' },
-      },
-    },
-    {
-      $sort: { tourCount: -1 },
-    },
-    { $match: { _id: { $ne: 'EASY' } } },
-  ])
+  TourRepository.prepareStatistics()
     .then((stats) => {
       res.status(200).json({
         status: 'success',
@@ -159,28 +119,7 @@ exports.getTourStats = (req, res) => {
 exports.getMonthlyPlan = (req, res) => {
   const year = +req.params.year;
 
-  TourModel.aggregate([
-    { $unwind: '$startDates' },
-    {
-      $match: {
-        startDates: {
-          $gte: new Date(`${year}-01-01`),
-          $lte: new Date(`${year}-12-31`),
-        },
-      },
-    },
-    {
-      $group: {
-        _id: { $month: '$startDates' },
-        numTourStarts: { $sum: 1 },
-        tours: { $push: '$name' },
-      },
-    },
-    { $addFields: { month: '$_id' } },
-    { $sort: { numTourStarts: -1 } },
-    { $project: { _id: 0 } }, // hide _id
-    { $limit: 12 },
-  ])
+  TourRepository.prepareMonthlyPlan(year)
     .then((plan) => {
       res.status(200).json({
         status: 'success',
@@ -198,31 +137,61 @@ exports.getMonthlyPlan = (req, res) => {
     });
 };
 
-const createDBQuery = (requestQuery) => {
-  const query = { ...requestQuery };
-  const excluded = ['page', 'sort', 'limit', 'fields'];
-  excluded.forEach((field) => delete query[field]);
+exports.getToursWithin = catchError(async (req, res) => {
+  const { distance, coordinates, units } = req.params;
+  const [latitude, longitude] = coordinates.split(',');
 
-  return JSON.parse(
-    JSON.stringify(query).replace(
-      /\b(gte|gt|lte|lt)\b/g,
-      (match) => `$${match}`
-    )
-  );
-};
-
-const preparePaginationProperties = async (
-  requestQuery,
-  dbQuery,
-  aliasQuery
-) => {
-  const page = +(aliasQuery ? aliasQuery.page : requestQuery.page) ?? 1;
-  const limit = +(aliasQuery ? aliasQuery.limit : requestQuery.limit) ?? 10;
-  const skipQuantity = (page - 1) * limit;
-
-  if (requestQuery.page) {
-    const numTours = await TourModel.countDocuments(dbQuery);
-    if (skipQuantity >= numTours) throw new Error('This page does not exist');
+  if (!latitude || !longitude) {
+    throw ControllerError('Please specify a latitude and longitude', 400);
   }
-  return { limit, skipQuantity };
+
+  const tours = await TourRepository.findToursWithin(
+    longitude,
+    latitude,
+    distance,
+    units
+  );
+
+  res.status(200).json({
+    status: 'success',
+    results: tours.length,
+    requestedAt: req.requestTime,
+    data: { tours },
+  });
+});
+
+exports.getDistances = catchError(async (req, res) => {
+  const { coordinates, units } = req.params;
+  const [latitude, longitude] = coordinates.split(',');
+
+  if (!latitude || !longitude) {
+    throw ControllerError('Please specify a latitude and longitude', 400);
+  }
+
+  const distances = await TourRepository.findDistances(
+    longitude,
+    latitude,
+    units
+  );
+
+  res.status(200).json({
+    status: 'success',
+    results: distances.length,
+    requestedAt: req.requestTime,
+    data: { distances },
+  });
+});
+
+const convertQueryToFilter = (requestQuery) => {
+  const query = { ...requestQuery };
+  const excludedFields = ['page', 'sort', 'limit', 'fields'];
+  excludedFields.forEach((field) => delete query[field]);
+
+  // Handle advanced filtering operators (gte, gt, lte, lt) by adding '$' prefix
+  const queryStr = JSON.stringify(query).replace(
+    /\b(gte|gt|lte|lt)\b/g,
+    (match) => `$${match}`
+  );
+
+  return JSON.parse(queryStr);
 };

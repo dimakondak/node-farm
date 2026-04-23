@@ -62,6 +62,33 @@ const tourSchema = new mongoose.Schema(
     createdAt: { type: Date, default: Date.now(), select: false },
     startDates: [Date],
     secretTour: { type: Boolean, default: false },
+    /**
+     * GeoJSON
+     */
+    startLocation: {
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
+    location: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    guides: [{ type: mongoose.Schema.ObjectId, ref: 'User' }],
   },
   {
     toJSON: { virtuals: true },
@@ -69,8 +96,21 @@ const tourSchema = new mongoose.Schema(
   }
 );
 
+tourSchema.index({ price: -1, ratingAverage: 1 });
+tourSchema.index({ slug: 1 });
+tourSchema.index({ startLocation: '2dsphere' });
+
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
+});
+
+/**
+ * The virtual population
+ */
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
 });
 
 /**
@@ -99,6 +139,13 @@ tourSchema.pre(/^find/, function () {
   this.start = Date.now();
 });
 
+tourSchema.pre(/^find/, function () {
+  this.populate({
+    path: 'guides',
+    select: '-__v',
+  });
+});
+
 tourSchema.post(/^find/, function (tours) {
   console.log(
     `Found ${tours?.length ?? 0} tours in ${Date.now() - this.start}ms`
@@ -106,7 +153,13 @@ tourSchema.post(/^find/, function (tours) {
 });
 
 tourSchema.pre('aggregate', function () {
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  const pipeline = this.pipeline();
+
+  if (!pipeline.length || !pipeline[0].$geoNear) {
+    pipeline.unshift({
+      $match: { secretTour: { $ne: true } },
+    });
+  }
 });
 
 const Tour = mongoose.model('Tour', tourSchema);

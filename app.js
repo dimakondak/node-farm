@@ -8,6 +8,7 @@ const hpp = require('hpp');
 
 const toursRouter = require('./routes/tours');
 const usersRouter = require('./routes/users');
+const reviewsRouter = require('./routes/reviews');
 const RouteError = require('./routes/RouteError');
 const { errorsController } = require('./controllers/errors');
 
@@ -87,6 +88,7 @@ app.use((req, res, next) => {
  */
 app.use('/api/v1/tours', toursRouter);
 app.use('/api/v1/users', usersRouter);
+app.use('/api/v1/reviews', reviewsRouter);
 
 app.get('/hello-world', (req, res) => {
   res.status(200).send('Hello World!');

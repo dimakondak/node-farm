@@ -7,6 +7,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
+    "db:seed": "cd ./dev-data && node ./import-dev-data.js --up",
+    "db:unseed": "cd ./dev-data && node ./import-dev-data.js --down",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

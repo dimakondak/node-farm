@@ -17,7 +17,7 @@ const {
   restrictTo,
   updatePassword,
 } = require('../controllers/authentication');
-const { UserRole } = require('../models/UserRole');
+const { UserRole } = require('../UserRole');
 
 const router = express.Router();
 
