@@ -15,9 +15,7 @@ app.get('/hello-world', (req, res) => {
 
 const getAllTours = (req, res) => {
     res.status(200).json({
-        status: 'success',
-        results: tours.length,
-        data: {
+        status: 'success', results: tours.length, data: {
             tours,
         },
     });
@@ -29,14 +27,12 @@ const getTour = (req, res) => {
 
     if (!tour) {
         return res.status(404).json({
-            status: 'fail',
-            message: 'Tour not found',
+            status: 'fail', message: 'Tour not found',
         });
     }
 
     res.status(200).json({
-        status: 'success',
-        data: {
+        status: 'success', data: {
             tour: tour,
         },
     });
@@ -48,21 +44,17 @@ const createTour = (req, res) => {
     const newTourObj = { id: newId, ...newTour };
     tours.push(newTourObj);
 
-    fs.writeFile(
-        `${__dirname}/dev-data/data/tours-simple.json`,
-        JSON.stringify(tours),
-        (error) => {
+    fs.writeFile(`${__dirname}/dev-data/data/tours-simple.json`,
+        JSON.stringify(tours), (error) => {
             if (error) {
                 res.status(500).send(error);
             }
             res.status(201).json({
-                status: 'success',
-                data: {
+                status: 'success', data: {
                     tour: newTourObj,
                 },
             });
-        },
-    );
+        });
 };
 
 const updateTour = (req, res) => {
@@ -70,8 +62,7 @@ const updateTour = (req, res) => {
         tour => tour.id === parseInt(req.params.id));
     if (tourIndex === -1) {
         return res.status(404).json({
-            status: 'fail',
-            message: 'Tour not found',
+            status: 'fail', message: 'Tour not found',
         });
     }
 
@@ -79,21 +70,17 @@ const updateTour = (req, res) => {
     const newTourObj = { ...(tours[tourIndex]), ...patch };
     tours[tourIndex] = newTourObj;
 
-    fs.writeFile(
-        `${__dirname}/dev-data/data/tours-simple.json`,
-        JSON.stringify(tours),
-        (error) => {
+    fs.writeFile(`${__dirname}/dev-data/data/tours-simple.json`,
+        JSON.stringify(tours), (error) => {
             if (error) {
                 res.status(500).send(error);
             }
             res.status(201).json({
-                status: 'success',
-                data: {
+                status: 'success', data: {
                     tour: newTourObj,
                 },
             });
-        },
-    );
+        });
 };
 
 const deleteTour = (req, res) => {
@@ -102,34 +89,31 @@ const deleteTour = (req, res) => {
 
     if (tourIndex === -1) {
         return res.status(404).json({
-            status: 'fail',
-            message: 'Tour not found',
+            status: 'fail', message: 'Tour not found',
         });
     }
 
     tours.splice(tourIndex, 1);
 
-    fs.writeFile(
-        `${__dirname}/dev-data/data/tours-simple.json`,
-        JSON.stringify(tours),
-        (error) => {
+    fs.writeFile(`${__dirname}/dev-data/data/tours-simple.json`,
+        JSON.stringify(tours), (error) => {
             if (error) {
                 return res.status(500).send(error);
             }
             res.status(204).json({
-                status: 'success',
-                data: null,
+                status: 'success', data: null,
             });
-        },
-    );
+        });
 };
 
-const tours = JSON.parse(
-    fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`).toString(),
-);
+const tours = JSON.parse(fs.readFileSync(
+    `${__dirname}/dev-data/data/tours-simple.json`).toString());
 
-app.get('/api/v1/tours', getAllTours);
-app.get('/api/v1/tours/:id{/:duration}', getTour);
-app.post('/api/v1/tours', createTour);
-app.patch('/api/v1/tours/:id', updateTour);
-app.delete('/api/v1/tours/:id', deleteTour);
+app.route('/api/v1/tours')
+.get(getAllTours)
+.post(createTour);
+
+app.route('/api/v1/tours/:id')
+.get(getTour)
+.patch(updateTour)
+.delete(deleteTour);
