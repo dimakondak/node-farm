@@ -1,4 +1,5 @@
 const TourModel = require('../models/Tour');
+const { catchError } = require('./errors');
 
 exports.getTours = async (req, res) => {
   const dbQuery = createDBQuery(req.query);
@@ -35,24 +36,23 @@ exports.getTours = async (req, res) => {
     });
 };
 
-exports.getTour = (req, res) => {
-  TourModel.findById(req.params.id)
-    .then((tour) => {
-      res.status(200).json({
-        status: 'success',
-        requestedAt: req.requestTime,
-        data: {
-          tour,
-        },
-      });
-    })
-    .catch(() => {
-      res.status(404).json({
-        status: 'fail',
-        message: 'Tour not found',
-      });
-    });
-};
+exports.getTour = catchError(async (req, res, next) => {
+  const tour = await TourModel.findById(req.params.id);
+  if (!tour) {
+    const dbError = new Error('Tour not found');
+    dbError.status = 404;
+    dbError.isOperational = true;
+    return next(dbError);
+  }
+
+  res.status(200).json({
+    status: 'success',
+    requestedAt: req.requestTime,
+    data: {
+      tour,
+    },
+  });
+});
 
 exports.createTour = (req, res) => {
   const newTourPayload = req.body;
