@@ -1,6 +1,10 @@
+const ControllerError = require('./ControllerError');
 process.loadEnvFile();
 
 exports.errorsController = (error, req, res, next) => {
+  if (process.env.NODE_ENV === 'dev') {
+    console.log(error);
+  }
   if (!error.isOperational)
     return res.status(500).json({
       status: 'error',
@@ -25,4 +29,24 @@ exports.errorsController = (error, req, res, next) => {
 };
 
 exports.catchError = (handler) => async (req, res, next) =>
-  handler(req, res, next).catch(next);
+  handler(req, res, next).catch((error) => {
+    console.error(error.message);
+    if (
+      error?.name === 'TokenExpiredError' ||
+      error?.name === 'JsonWebTokenError'
+    ) {
+      const tokenError = new ControllerError('Invalid or expired token', 401);
+
+      return next(tokenError);
+    }
+
+    if (error?.name === 'ValidationError') {
+      console.error(error.message);
+      const validationError = new Error('Internal Server Error');
+      validationError.isOperational = false;
+
+      return next(validationError);
+    }
+
+    next(error);
+  });

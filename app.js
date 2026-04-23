@@ -1,5 +1,11 @@
 const express = require('express');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongoSanitize = require('@exortek/express-mongo-sanitize');
+const { xss } = require('express-xss-sanitizer');
+const hpp = require('hpp');
+
 const toursRouter = require('./routes/tours');
 const usersRouter = require('./routes/users');
 const RouteError = require('./routes/RouteError');
@@ -8,25 +14,77 @@ const { errorsController } = require('./controllers/errors');
 process.loadEnvFile();
 
 const app = express();
+/**
+ * Sets security HTTP header
+ */
+app.use(helmet());
 
+/**
+ * Provides logs in dev mode
+ */
 if (process.env.NODE_ENV === 'dev') {
   app.use(morgan('dev'));
 }
-app.set('query parser', 'extended');
-app.use(express.json());
-app.use(express.static(`${__dirname}/public`));
-app.use((req, res, next) => {
-  console.log(req.url);
 
-  next();
+const rateLimiter = rateLimit({
+  max: 60,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many requests from this IP, please try again later',
 });
+/**
+ * Limits requests to 60 per hour per IP address
+ */
+app.use(rateLimiter);
+
+/**
+ * Used for body parsing, reading data from the body
+ */
+app.set('query parser', 'extended');
+app.use(express.json({ limit: '10kb' }));
+
+/**
+ * Sanitizes data against NoSQL query injection
+ */
+app.use(mongoSanitize());
+
+/**
+ * Sanitizes data against XSS
+ */
+app.use(xss());
+
+/**
+ * Prevents parameter pollution
+ */
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsQuantity',
+      'ratingAverage',
+      'maxGroupSize',
+      'difficulty',
+      'price',
+    ],
+  })
+);
+
+/**
+ * Serves resources
+ */
+app.use(express.static(`${__dirname}/public`));
+
+/**
+ * Records time of the request
+ */
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
 
   next();
 });
 
-// Routes
+/**
+ * Routes setup
+ */
 app.use('/api/v1/tours', toursRouter);
 app.use('/api/v1/users', usersRouter);
 
