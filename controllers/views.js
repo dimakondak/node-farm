@@ -20,3 +20,9 @@ exports.getTour = catchError(async (req, res) => {
 exports.getLogin = catchError(async (req, res) => {
   res.status(200).render('login', { title: 'Login' });
 });
+
+exports.getAccount = catchError(async (req, res) => {
+  res.status(200).render('account', {
+    title: 'Your account',
+  });
+});
