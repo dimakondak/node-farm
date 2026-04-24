@@ -3,13 +3,22 @@ import {showAlert} from './showAlert';
 
 export const updateUserProfile = async (payload) => {
   try {
-    const response = await axios.patch(
+    await axios.patch(
       'http://localhost:3001/api/v1/users/updateCurrentUser',
       payload
     );
-    const updatedUser = response.data.user;
+  } catch (error) {
+    console.error(error);
+    showAlert('error', error.response.data.message);
+  }
+};
 
-    console.log(updatedUser);
+export const updatePassword = async (payload) => {
+  try {
+    await axios.patch(
+      'http://localhost:3001/api/v1/users/updatePassword',
+      payload
+    );
   } catch (error) {
     console.error(error);
     showAlert('error', error.response.data.message);
