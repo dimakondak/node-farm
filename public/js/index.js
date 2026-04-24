@@ -1,8 +1,10 @@
 import { login, logout } from './authentication';
 import { renderMap } from './mapbox';
+import { updateUserProfile } from './user';
 
-const loginForm = document.querySelector('.form');
+const loginForm = document.querySelector('.form--login');
 const logoutButton = document.querySelector('.nav__el--logout');
+const userProfileForm = document.querySelector('.form-user-data');
 
 if (loginForm) {
   loginForm.addEventListener('submit', async (event) => {
@@ -15,6 +17,17 @@ if (loginForm) {
 }
 if (logoutButton) {
   logoutButton.addEventListener('click', logout);
+}
+
+if (userProfileForm) {
+  userProfileForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const photo = document.getElementById('photo').value;
+
+    await updateUserProfile({ name, email, photo });
+  });
 }
 
 const mapElement = document.getElementById('map');
