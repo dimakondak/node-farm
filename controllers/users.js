@@ -1,18 +1,6 @@
-const multer = require('multer');
-const sharp = require('sharp');
-
 const UserRepository = require('../repository/UserRepository');
 const { catchError } = require('./errors');
-const ControllerError = require('./ControllerError');
-
-const multerStorage = multer.memoryStorage();
-const multerFilter = (req, file, cb) => {
-  if (!file.mimetype.startsWith('image')) {
-    return cb(new ControllerError('Not image', 400));
-  }
-  cb(null, true);
-};
-const upload = multer({ storage: multerStorage, fileFilter: multerFilter });
+const { resizeUserPhoto, upload } = require('../services/images');
 
 exports.uploadPhoto = upload.single('photo');
 
@@ -21,13 +9,7 @@ exports.resizeUserPhoto = catchError(async (req, res, next) => {
     return next();
   }
 
-  const extension = 'jpeg';
-  req.file.filename = `user-${req.user.id}-${Date.now()}.${extension}`;
-  await sharp(req.file.buffer)
-    .resize(500, 500)
-    .toFormat(extension)
-    .jpeg({ quality: 90 })
-    .toFile(`public/img/users/${req.file.filename}`);
+  await resizeUserPhoto(req.file, `user-${req.user.id}`);
 
   next();
 });
