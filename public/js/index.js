@@ -1,6 +1,6 @@
 import {login, logout} from './authentication';
 import {renderMap} from './mapbox';
-import {updateUserProfile} from './user';
+import {updatePassword, updateUserProfile} from './user';
 
 const loginForm = document.querySelector('.form--login');
 const logoutButton = document.querySelector('.nav__el--logout');
@@ -23,24 +23,19 @@ if (logoutButton) {
 if (userProfileForm) {
   userProfileForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const name = document.getElementById('name').value;
-    const email = document.getElementById('email').value;
-    const photo = document.getElementById('photo').value;
+    const form = new FormData(event.target);
 
-    await updateUserProfile({ name, email, photo });
+    await updateUserProfile(form);
   });
 }
-/*if (userPasswordForm) {
+if (userPasswordForm) {
   userProfileForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const password = document.getElementById('password-current').value;
-    const newPassword = document.getElementById('password').value;
-    const newPasswordConfirm =
-      document.getElementById('password-confirm').value;
+    const form = new FormData(event.target);
 
-    await updatePassword({ password, newPassword, newPasswordConfirm });
+    await updatePassword(form);
   });
-}*/
+}
 
 const mapElement = document.getElementById('map');
 
