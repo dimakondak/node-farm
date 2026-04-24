@@ -1,6 +1,6 @@
-import { login, logout } from './authentication';
-import { renderMap } from './mapbox';
-import { updatePassword, updateUserProfile } from './user';
+import {login, logout} from './authentication';
+import {renderMap} from './mapbox';
+import {updateUserProfile} from './user';
 
 const loginForm = document.querySelector('.form--login');
 const logoutButton = document.querySelector('.nav__el--logout');
@@ -30,7 +30,7 @@ if (userProfileForm) {
     await updateUserProfile({ name, email, photo });
   });
 }
-if (userPasswordForm) {
+/*if (userPasswordForm) {
   userProfileForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const password = document.getElementById('password-current').value;
@@ -40,7 +40,7 @@ if (userPasswordForm) {
 
     await updatePassword({ password, newPassword, newPasswordConfirm });
   });
-}
+}*/
 
 const mapElement = document.getElementById('map');
 
