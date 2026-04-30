@@ -1,6 +1,5 @@
 const MongoRepository = require('./MongoRepository');
 const TourModel = require('./models/Tour');
-const crypto = require('crypto');
 
 class TourRepository extends MongoRepository {
   constructor() {
