@@ -193,7 +193,7 @@ exports.resizeTourImages = catchError(async (req, res, next) => {
     return next();
   }
 
-  await resizeTourImages(req.files);
+  await resizeTourImages(req.files, req.params.id);
 
   next();
 });

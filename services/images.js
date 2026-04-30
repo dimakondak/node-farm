@@ -25,6 +25,29 @@ exports.resizeUserPhoto = async (photo, userId) => {
     .toFile(`public/img/users/${photo.filename}`);
 };
 
-exports.resizeTourImages = async (files) => {
-  console.log(files);
+exports.resizeTourImages = async (files, tourId) => {
+  if (files) {
+    return;
+  }
+
+  const extension = 'jpeg';
+  const imageCoverFilename = `tour-${tourId}-${Date.now()}-cover.${extension}`;
+
+  await sharp(files.imageCover[0].buffer)
+    .resize(2000, 1333)
+    .toFormat(extension)
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/tours/${imageCoverFilename}`);
+
+  await Promise.all(
+    files.images.map(async (image, index) => {
+      const filename = `tour-${tourId}-${Date.now()}-${index + 1}.${extension}`;
+
+      await sharp(image.buffer)
+        .resize(2000, 1333)
+        .toFormat(extension)
+        .jpeg({ quality: 90 })
+        .toFile(`public/img/tours/${filename}`);
+    })
+  );
 };
