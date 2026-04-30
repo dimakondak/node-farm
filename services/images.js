@@ -1,7 +1,15 @@
 const sharp = require('sharp');
 const multer = require('multer');
 
-exports.upload = upload;
+const multerStorage = multer.memoryStorage();
+const multerFilter = (req, file, cb) => {
+  if (!file.mimetype.startsWith('image')) {
+    return cb(new Error('Not image'));
+  }
+  cb(null, true);
+};
+
+exports.upload = multer({ storage: multerStorage, fileFilter: multerFilter });
 
 exports.resizeUserPhoto = async (photo, userId) => {
   if (photo) {
@@ -17,11 +25,6 @@ exports.resizeUserPhoto = async (photo, userId) => {
     .toFile(`public/img/users/${photo.filename}`);
 };
 
-const multerStorage = multer.memoryStorage();
-const multerFilter = (req, file, cb) => {
-  if (!file.mimetype.startsWith('image')) {
-    return cb(new Error('Not image'));
-  }
-  cb(null, true);
+exports.resizeTourImages = async (files) => {
+  console.log(files);
 };
-const upload = multer({ storage: multerStorage, fileFilter: multerFilter });

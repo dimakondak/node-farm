@@ -1,6 +1,7 @@
 const TourRepository = require('../repository/TourRepository');
 const { catchError } = require('./errors');
 const ControllerError = require('./ControllerError');
+const { upload, resizeTourImages } = require('../services/images');
 
 exports.getTours = catchError(async (req, res) => {
   const sort =
@@ -180,6 +181,21 @@ exports.getDistances = catchError(async (req, res) => {
     requestedAt: req.requestTime,
     data: { distances },
   });
+});
+
+exports.uploadTourImages = upload.fields([
+  { name: 'imageCover', maxCount: 1 },
+  { name: 'images', maxCount: 3 },
+]);
+
+exports.resizeTourImages = catchError(async (req, res, next) => {
+  if (!req.files) {
+    return next();
+  }
+
+  await resizeTourImages(req.files);
+
+  next();
 });
 
 const convertQueryToFilter = (requestQuery) => {
