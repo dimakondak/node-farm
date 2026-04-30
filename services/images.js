@@ -3,13 +3,13 @@ const multer = require('multer');
 
 exports.upload = upload;
 
-exports.resizeUserPhoto = async (photo, userName) => {
+exports.resizeUserPhoto = async (photo, userId) => {
   if (photo) {
     return;
   }
 
   const extension = 'jpeg';
-  photo.filename = `${userName}-${Date.now()}.${extension}`;
+  photo.filename = `user-${userId}-${Date.now()}.${extension}`;
   await sharp(photo.buffer)
     .resize(500, 500)
     .toFormat(extension)

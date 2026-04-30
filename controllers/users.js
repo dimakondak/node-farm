@@ -9,7 +9,7 @@ exports.resizeUserPhoto = catchError(async (req, res, next) => {
     return next();
   }
 
-  await resizeUserPhoto(req.file, `user-${req.user.id}`);
+  await resizeUserPhoto(req.file, req.user.id);
 
   next();
 });
