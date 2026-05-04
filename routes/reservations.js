@@ -10,10 +10,11 @@ const { UserRole } = require('../UserRole');
 
 const router = express.Router();
 
+router.use(protect);
 router
   .route('/checkout-session/:tourId')
   .get(getCheckoutSession)
-  .post(protect, restrictTo([UserRole.USER]), createReservation);
+  .post(restrictTo([UserRole.USER]), createReservation);
 router
   .route('/:id')
   .delete(
@@ -21,6 +22,6 @@ router
     restrictTo([UserRole.ADMIN, UserRole.USER]),
     deleteReservation
   )
-  .put(protect, restrictTo([UserRole.USER]), updateReservation);
+  .put(restrictTo([UserRole.USER]), updateReservation);
 
 module.exports = router;

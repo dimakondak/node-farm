@@ -1,6 +1,7 @@
-import {login, logout} from './authentication';
-import {renderMap} from './mapbox';
-import {updatePassword, updateUserProfile} from './user';
+import { login, logout } from './authentication';
+import { renderMap } from './mapbox';
+import { updatePassword, updateUserProfile } from './user';
+import { reserveTour } from './reservation';
 
 const loginForm = document.querySelector('.form--login');
 const logoutButton = document.querySelector('.nav__el--logout');
@@ -43,4 +44,13 @@ if (mapElement) {
   const startLocation = JSON.parse(mapElement.dataset.startLocation);
 
   renderMap([startLocation]);
+}
+
+const reserveButton = document.getElementById('book-tour');
+
+if (reserveButton) {
+  reserveButton.addEventListener('click', async () => {
+    const tourId = reserveButton.dataset.tourId;
+    await reserveTour(tourId);
+  });
 }
