@@ -1,6 +1,7 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const TourRepository = require('../repository/TourRepository');
+const ReservationRepository = require('../repository/ReservationRepository');
 const { catchError } = require('./errors');
 const ControllerError = require('./ControllerError');
 
@@ -17,7 +18,7 @@ exports.getCheckoutSession = catchError(async (req, res) => {
     mode: 'payment',
     payment_method_types: ['card'],
 
-    success_url: `${req.protocol}://${req.get('host')}/`,
+    success_url: `${req.protocol}://${req.get('host')}/my-reservations?tour=${tourId}&price=${tour.price}`,
     cancel_url: `${req.protocol}://${req.get('host')}/tour/${tour.slug}`,
 
     customer_email: req.user.email,
@@ -46,35 +47,32 @@ exports.getCheckoutSession = catchError(async (req, res) => {
   });
 });
 
-exports.createReservation = catchError(async (req, res) => {
-  const newReviewPayload = {
+exports.createReservation = catchError(async (req, res, next) => {
+  if (!req.query.tour) {
+    return next();
+  }
+
+  const payload = {
     user: req.user.id,
-    tour: req.params?.tourId,
-    ...req.body,
+    tour: req.query.tour,
+    price: req.query.price,
+    paid: req.query.paid ?? true,
   };
+  await ReservationRepository.create(payload);
 
-  const review = await TourRepository.create(newReviewPayload);
-
-  res.status(201).json({
-    status: 'success',
-    data: { review },
-  });
+  next();
 });
 
 exports.updateReservation = catchError(async (req, res) => {
-  const review = await TourRepository.updateById(req.params.id, req.body);
-
-  res.status(201).json({
-    status: 'success',
-    data: { review },
+  res.status(500).json({
+    status: 'error',
+    message: 'This route is not yet implemented',
   });
 });
 
 exports.deleteReservation = catchError(async (req, res) => {
-  await TourRepository.deleteById(req.params.id);
-  res.status(204).json({
-    status: 'success',
-    requestedAt: req.requestTime,
-    data: null,
+  res.status(500).json({
+    status: 'error',
+    message: 'This route is not yet implemented',
   });
 });

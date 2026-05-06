@@ -88,6 +88,12 @@ class TourRepository extends MongoRepository {
     });
   }
 
+  async findToursByIDs(tourIDs) {
+    const filter = tourIDs && { _id: { $in: tourIDs } };
+
+    return this.find(filter);
+  }
+
   async findDistances(longitude, latitude, units) {
     const unitsMultiplier = units === 'mi' ? 0.000621371 : 0.001;
     return this.model.aggregate([
