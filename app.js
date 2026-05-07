@@ -8,6 +8,7 @@ const helmet = require('helmet');
 const mongoSanitize = require('@exortek/express-mongo-sanitize');
 const { xss } = require('express-xss-sanitizer');
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
 
 const toursRouter = require('./routes/tours');
 const usersRouter = require('./routes/users');
@@ -30,6 +31,16 @@ app.set('views', path.join(__dirname, 'views'));
  * Serves resources
  */
 app.use(express.static(path.join(__dirname, 'public')));
+
+/**
+ * CORS restrictions
+ */
+app.use(
+  cors({
+    origin: ['http://localhost:3001'],
+    credentials: true,
+  })
+);
 
 /**
  * Sets security HTTP header
@@ -122,6 +133,8 @@ app.use((req, res, next) => {
 /**
  * Routes setup
  */
+app.options('*', cors());
+
 app.use('/', viewsRouter);
 
 app.use('/api/v1/tours', toursRouter);
