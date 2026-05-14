@@ -52,6 +52,19 @@ class TourRepository extends MongoRepository {
     ]);
   }
 
+  async findTourBySlug(slug) {
+    return this.model
+      .findOne({ slug })
+      .populate({
+        path: 'reviews',
+        fields: 'review rating user',
+      })
+      .populate({
+        path: 'guides',
+        fields: 'name photo',
+      });
+  }
+
   async countToursToSkip(filter, page, limit) {
     const skipQuantity = (page - 1) * limit;
 
@@ -73,6 +86,12 @@ class TourRepository extends MongoRepository {
         },
       },
     });
+  }
+
+  async findToursByIDs(tourIDs) {
+    const filter = tourIDs && { _id: { $in: tourIDs } };
+
+    return this.find(filter);
   }
 
   async findDistances(longitude, latitude, units) {

@@ -4,9 +4,8 @@ const ControllerError = require('./ControllerError');
 
 exports.getReviews = catchError(async (req, res) => {
   const tourId = req.params?.tourId ?? req.body?.tourId;
-  const filter = tourId && { tour: { $eq: tourId } };
 
-  const reviews = await ReviewRepository.find(filter);
+  const reviews = await ReviewRepository.findReviewsByTourId(tourId);
 
   if (!reviews.length) {
     throw new ControllerError('No reviews found.', 404);

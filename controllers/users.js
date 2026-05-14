@@ -1,10 +1,24 @@
 const UserRepository = require('../repository/UserRepository');
 const { catchError } = require('./errors');
+const { resizeUserPhoto, upload } = require('../services/images');
+
+exports.uploadPhoto = upload.single('photo');
+
+exports.resizeUserPhoto = catchError(async (req, res, next) => {
+  if (!req.file) {
+    return next();
+  }
+
+  await resizeUserPhoto(req.file, req.user.id);
+
+  next();
+});
 
 exports.updateCurrentUserProfile = catchError(async (req, res) => {
   const profile = {
     name: req.body.name,
     email: req.body.email,
+    ...(req.file ? { photo: req.file.filename } : {}),
   };
   const updatedUser = await UserRepository.updateById(req.user.id, profile);
 

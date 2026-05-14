@@ -2,6 +2,12 @@ const ControllerError = require('./ControllerError');
 process.loadEnvFile();
 
 exports.errorsController = (error, req, res, next) => {
+  if (!req.originalUrl.startsWith('/api')) {
+    return res.status(error.statusCode ?? 500).render('error', {
+      title: 'Error',
+      message: error.message,
+    });
+  }
   if (process.env.NODE_ENV === 'dev') {
     console.log(error);
   }

@@ -52,6 +52,15 @@ exports.login = catchError(async (req, res) => {
   });
 });
 
+exports.logout = catchError(async (req, res) => {
+  res.cookie('jwt', 'unauthenticated', {
+    expires: new Date(Date.now()),
+    httpOnly: true,
+  });
+
+  res.status(200).json({ status: 'success' });
+});
+
 exports.forgotPassword = catchError(async (req, res) => {
   const { email } = req.body;
 
@@ -135,14 +144,15 @@ exports.updatePassword = catchError(async (req, res) => {
 
 exports.protect = catchError(async (req, res, next) => {
   const isTokenAbsent =
-    !req.headers.authorization ||
-    !req.headers.authorization.startsWith('Bearer');
+    (!req.headers.authorization ||
+      !req.headers.authorization.startsWith('Bearer')) &&
+    !req.cookies.jwt;
 
   if (isTokenAbsent) {
     throw new ControllerError('Unauthorized', 401);
   }
 
-  const token = req.headers.authorization.split(' ')[1];
+  const token = req.cookies.jwt || req.headers.authorization.split(' ')[1];
   if (!token) {
     throw new ControllerError('Unauthorized', 401);
   }
@@ -156,9 +166,38 @@ exports.protect = catchError(async (req, res, next) => {
     throw new ControllerError('Token expired', 401);
   }
 
+  res.locals.user = user;
   req.user = user;
   next();
 });
+
+exports.isLoggedIn = async (req, res, next) => {
+  const isTokenAbsent =
+    (!req.headers.authorization ||
+      !req.headers.authorization.startsWith('Bearer')) &&
+    !req.cookies.jwt;
+
+  if (isTokenAbsent) {
+    return next();
+  }
+
+  const token = req.cookies.jwt || req.headers.authorization.split(' ')[1];
+  if (!token) {
+    return next();
+  }
+
+  const { id, iat } = JWT.verify(token, process.env.JWT_SECRET);
+  const user = await UserRepository.findById(id, {
+    select: '+passwordChangedAt',
+  });
+
+  if (!user.isTokenActual(iat)) {
+    return next();
+  }
+
+  res.locals.user = user;
+  next();
+};
 
 exports.restrictTo = (roles) =>
   catchError(async (req, res, next) => {

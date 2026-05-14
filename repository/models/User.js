@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema({
     },
     select: false,
   },
-  photo: String,
+  photo: { type: String, default: 'default.jpg' },
   createdAt: { type: Date, default: Date.now(), select: false },
   passwordChangedAt: { type: Date, default: Date.now(), select: false },
   passwordResetToken: {

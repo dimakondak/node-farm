@@ -1,5 +1,7 @@
 const express = require('express');
 const {
+  uploadPhoto,
+  resizeUserPhoto,
   updateCurrentUserProfile,
   deleteCurrentUser,
   getAllUsers,
@@ -11,6 +13,7 @@ const {
 const {
   signup,
   login,
+  logout,
   forgotPassword,
   resetPassword,
   protect,
@@ -27,8 +30,11 @@ router.route('/forgotPassword').post(forgotPassword);
 router.route('/resetPassword/:token').patch(resetPassword);
 
 router.use(protect);
+router.route('/logout').post(logout);
 router.route('/updatePassword').patch(updatePassword);
-router.route('/updateCurrentUser').patch(updateCurrentUserProfile);
+router
+  .route('/updateCurrentUser')
+  .patch(uploadPhoto, resizeUserPhoto, updateCurrentUserProfile);
 router.route('/deleteCurrentUser').delete(deleteCurrentUser);
 router
   .route('/')
